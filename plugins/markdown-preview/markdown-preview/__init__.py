@@ -39,7 +39,12 @@ except:
 	_ = lambda s: s
 
 # Can be used to add default HTML code (e.g. default header section with CSS).
-htmlTemplate = "%s"
+htmlTemplate = """
+<head>
+<link href="http://thomasf.github.io/solarized-css/solarized-dark.min.css" rel="stylesheet"></link>
+</head>
+%s
+"""
 
 # Configuration.
 

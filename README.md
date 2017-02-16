@@ -1,3 +1,10 @@
+Updates to the original source https://github.com/jpfleury/gedit-markdown:
+
+- works in newer gedit versions (tested on 3.22)
+- added custom stylesheet for Markdown Preview, see screenshot bellow
+
+---
+
 **Note: if you use gedit 2 or gedit 3.0 to 3.6, please refer to the [documentation of gedit-markdown v1](https://github.com/jpfleury/gedit-markdown/tree/v1#readme). Below is the documentation of the version 2 for gedit 3.8 and 3.10.**
 
 ## Overview
