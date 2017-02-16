@@ -24,7 +24,7 @@ Specifically, it adds:
 [Markdown]: http://daringfireball.net/projects/markdown/
 [Markdown Extra]: http://michelf.com/projects/php-markdown/extra/
 
-<img src="https://raw.githubusercontent.com/jpfleury/gedit-markdown/master/doc/exemple1.png" width="684" height="779" alt="Default Markdown syntax highlighting in gedit." />
+![screenshot1](doc/exemple1.png "Default Markdown syntax highlighting in gedit.")
 
 ## Requirements
 
@@ -36,15 +36,8 @@ Specifically, it adds:
 
 ## Installation (or update)
 
-- [Download the archive of gedit-markdown v2.](https://github.com/jpfleury/gedit-markdown/archive/master.zip)
-
-- Extract the archive.
-
-- Open a terminal in the extracted folder.
-
-- Run the installer in the terminal:
-
-		./gedit-markdown.sh install
+- download and extract the repo
+- `$ ./gedit-markdown.sh install`
 
 Markdown support will be added for the current user (so no need root privileges). The folder created by the extraction can be deleted after installation.
 
@@ -100,15 +93,21 @@ When right clicking on the preview area, a context menu appears and lists severa
 
 Here's a screenshot of the plugin when it's displayed in the bottom panel:
 
-<img src="https://raw.githubusercontent.com/jpfleury/gedit-markdown/master/doc/exemple3.png" width="684" height="886" alt="Markdown Preview in the bottom panel of gedit." />
+![screenshot](doc/exemple3.png "Markdown Preview in the bottom panel of gedit.")
 
 Now the same plugin displayed in the side panel (click to see the original image):
 
-<a href="https://raw.githubusercontent.com/jpfleury/gedit-markdown/master/doc/exemple4-grand.png"><img src="https://raw.githubusercontent.com/jpfleury/gedit-markdown/master/doc/exemple4-petit.png" width="684" height="445" alt="Markdown Preview in the side panel of gedit." /></a>
+![screenshot](doc/exemple4.png "")
+
+[![screenshot][2]][1]
+
+  [1]: doc/exemple4-grand.png
+  [2]: doc/exemple4-petit.png (Markdown Preview in the side panel of gedit.)
+
 
 Note that when the cursor passes over a link in the preview area, a tooltip displays the URL:
 
-<img src="https://raw.githubusercontent.com/jpfleury/gedit-markdown/master/doc/exemple5.png" width="684" height="128" alt="Tooltip displaying URL when the cursor passes over a link." />
+![screenshot](doc/exemple5.png "Tooltip displaying URL when the cursor passes over a link.")
 
 ### Snippets
 
@@ -124,7 +123,7 @@ To edit the tool, go to *Tools > Manage External Tools...*.
 
 An optional color scheme is installed by gedit-markdown. To use it, go to *Edit > Preferences > Font & Colors > Color Scheme* in gedit and select *Classic Markdown*. This color scheme is more similar to an HTML rendering, for example strong emphases and headers are in bold and black font, links are blue and underlined, etc. Here's a screenshot of a Markdown document highlighted with this color scheme:
 
-<img src="https://raw.githubusercontent.com/jpfleury/gedit-markdown/master/doc/exemple2.png" width="684" height="779" alt="Optional color scheme for Markdown syntax highlighting in gedit." />
+![screenshot5](doc/exemple2.png "Optional color scheme for Markdown syntax highlighting in gedit.")
 
 ### Configuration file
 
@@ -201,10 +200,6 @@ The section `markdown-preview` contains several properties:
 ## Localization
 
 The plugin *Markdown Preview* is localizable. The file containing strings is `plugins/markdown-preview/locale/markdown-preview.pot`.
-
-## Development
-
-Git is used for revision control. [Repository can be browsed online or cloned.](https://github.com/jpfleury/gedit-markdown)
 
 ## License
 
