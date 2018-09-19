@@ -451,10 +451,15 @@
          ~~~
          <em>HTML code</em> displayed <strong>literally</strong>.
          ~~~
+         OR
+         ```html
+         <em>HTML code</em> displayed <strong>literally</strong>.
+         ```
     -->
     <context id="fenced-code-block" class="no-spell-check" style-ref="code">
-      <start>^(~{3,})[ \t]*$</start>
-      <end>^(\%{1@start})[ \t]*$</end>
+      <!-- <start>^(~{3,}|`{3,})\w*\s*$</start> -->
+      <start>^(~{3,}|`{3,})</start>
+      <end>^(\%{1@start})\s*$</end>
     </context>
 
     <!-- Example:
