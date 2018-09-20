@@ -50,6 +50,7 @@
     <style id="line-break" _name="Line Break" map-to="def:note"/>
 
     <!-- Markdown Extra styles. -->
+    <style id="front-matter-marker" _name="Front Matter" map-to="def:preprocessor"/>
     <style id="header-id-marker" _name="Header Id Marker" map-to="def:shebang"/>
     <style id="definition-list-marker" _name="Definition List Marker" map-to="def:shebang"/>
     <style id="footnote-marker" _name="Footnote Marker" map-to="def:shebang"/>
@@ -60,6 +61,28 @@
 
   <definitions>
     <!-- _______________________ Markdown contexts. _______________________ -->
+
+    <!-- Examples:
+         -‐-
+         layout: post
+         title: my awesome post
+         tags: [misc, no-comment]
+         -‐-
+    -->
+    <context id="front-matter" class="no-spell-check"
+      style-ref="front-matter-marker"
+      first-line-only="true">
+      <start>^(-{3,})$</start>
+      <end>^(-{3,})$</end>
+      <include>
+        <context extend-parent="false">
+          <start></start>
+          <include>
+            <context ref="yaml:yaml"/>
+          </include>
+        </context>
+      </include>
+    </context>
 
     <!-- Examples:
          Header 1
@@ -576,6 +599,7 @@
 
     <context id="markdown-syntax">
       <include>
+        <context ref="front-matter"/>
         <!-- Markdown contexts. -->
         <context ref="atx-header"/>
         <context ref="setext-header"/>
