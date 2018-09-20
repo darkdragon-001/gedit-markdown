@@ -456,10 +456,72 @@
          <em>HTML code</em> displayed <strong>literally</strong>.
          ```
     -->
-    <context id="fenced-code-block" class="no-spell-check" style-ref="code">
-      <!-- <start>^(~{3,}|`{3,})\w*\s*$</start> -->
+    <context id="fenced-code-block" class="no-spell-check">
       <start>^(~{3,}|`{3,})</start>
       <end>^(\%{1@start})\s*$</end>
+      <include>
+        <context sub-pattern="0" where="start" style-ref="label"/>
+        <context sub-pattern="0" where="end" style-ref="label"/>
+
+        <!-- Match the language header and use the appropriate language style -->
+        <context id="fenced-code-block-sh" extend-parent="false">
+          <start>sh</start>
+          <include><context ref="sh:sh"/></include>
+        </context>
+        <context id="fenced-code-block-html" extend-parent="false">
+          <start>html</start>
+          <include><context ref="html:html"/></include>
+        </context>
+        <context id="fenced-code-block-js" extend-parent="false">
+          <start>(js|javascript)</start>
+          <include><context ref="js:js"/></include>
+        </context>
+        <context id="fenced-code-block-css" extend-parent="false">
+          <start>css</start>
+          <include><context ref="css:css"/></include>
+        </context>
+        <!-- SCSS & Less are new and not yet available in gedit Ubuntu build
+        <context id="fenced-code-block-scss" extend-parent="false">
+          <start>scss</start>
+          <include><context ref="scss:scss"/></include>
+        </context> -->
+        <context id="fenced-code-block-json" extend-parent="false">
+          <start>json</start>
+          <include><context ref="json:json"/></include>
+        </context>
+        <context id="fenced-code-block-xml" extend-parent="false">
+          <start>xml</start>
+          <include><context ref="xml:xml"/></include>
+        </context>
+        <context id="fenced-code-block-ini" extend-parent="false">
+          <start>ini</start>
+          <include><context ref="ini:ini"/></include>
+        </context>
+        <context id="fenced-code-block-java" extend-parent="false">
+          <start>java</start>
+          <include><context ref="java:java"/></include>
+        </context>
+        <context id="fenced-code-block-c" extend-parent="false">
+          <start>(c|cpp|csharp)\%]</start>
+          <include><context ref="c:c"/></include>
+        </context>
+        <context id="fenced-code-block-php" extend-parent="false">
+          <start>php</start>
+          <include><context ref="php:php"/></include>
+        </context>
+        <context id="fenced-code-block-sql" extend-parent="false">
+          <start>sql</start>
+          <include><context ref="sql:sql"/></include>
+        </context>
+        <context id="fenced-code-block-yaml" extend-parent="false">
+          <start>(yaml|yml)</start>
+          <include><context ref="yaml:yaml"/></include>
+        </context>
+        <context id="fenced-code-block-python" extend-parent="false">
+          <start>python</start>
+          <include><context ref="python:python"/></include>
+        </context>
+      </include>
     </context>
 
     <!-- Example:
