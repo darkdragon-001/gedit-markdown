@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gi
-gi.require_version('WebKit', '3.0')
-from gi.repository import Gdk, Gtk, Gedit, GObject, WebKit, Gio
+gi.require_version('WebKit2', '4.0')
+from gi.repository import Gdk, Gtk, Gedit, GObject, WebKit2, Gio
 import codecs
 import os
 import sys
@@ -106,12 +106,16 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.scrolledWindow.set_property("vscrollbar-policy", Gtk.PolicyType.AUTOMATIC)
 		self.scrolledWindow.set_property("shadow-type", Gtk.ShadowType.IN)
 		
-		self.htmlView = WebKit.WebView()
-		self.htmlView.connect("hovering-over-link", self.onHoveringOverLinkCb)
-		self.htmlView.connect("navigation-policy-decision-requested",
-		                       self.onNavigationPolicyDecisionRequestedCb)
-		self.htmlView.connect("populate-popup", self.onPopulatePopupCb)
-		self.htmlView.load_string((htmlTemplate % ("", )), "text/html", "utf-8", "file:///")
+		self.htmlView = WebKit2.WebView()
+		# TODO connect signals: https://lazka.github.io/pgi-docs/#WebKit2-4.0/classes/WebView.html#signals
+		# TODO replace by signal "mouse-target-changed"
+		#self.htmlView.connect("hovering-over-link", self.onHoveringOverLinkCb)
+		# TODO replace by signal "decide-policy"
+		#self.htmlView.connect("navigation-policy-decision-requested",
+		#                       self.onNavigationPolicyDecisionRequestedCb)
+		# TODO replace by signal "script-dialog"
+		#self.htmlView.connect("populate-popup", self.onPopulatePopupCb)
+		self.htmlView.load_html((htmlTemplate % ("", )), "file:///")
 		
 		self.scrolledWindow.add(self.htmlView)
 		self.scrolledWindow.show_all()
@@ -190,7 +194,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			if newUrl.startswith("/"):
 				newUrl = "file://" + newUrl
 			
-			self.htmlView.open(newUrl)
+			self.htmlView.load_uri(newUrl)
 	
 	def goToAnotherUrlDialog(self):
 		dialog = Gtk.MessageDialog(None,
@@ -285,7 +289,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		return False
 	
 	def openInEmbeddedBrowser(self):
-		self.htmlView.open(self.overLinkUrl)
+		self.htmlView.load_uri(self.overLinkUrl)
 	
 	def openInExternalBrowser(self):
 		webbrowser.open_new_tab(self.overLinkUrl)
@@ -394,7 +398,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		placement = self.scrolledWindow.get_placement()
 		
 		htmlDoc = self.htmlView
-		htmlDoc.load_string(html, "text/html", "utf-8", "file:///")
+		htmlDoc.load_html(html, "file:///")
 		
 		self.scrolledWindow.set_placement(placement)
 		
