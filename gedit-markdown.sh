@@ -135,6 +135,7 @@ fichiersAsupprimer=(
 	"$cheminSnippets/markdown-extra.xml"
 	"$cheminStyles/classic-markdown.xml"
 	"$cheminTools/export-to-html"
+	"$cheminTools/export-to-pdf"
 )
 
 ########################################################################

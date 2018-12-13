@@ -113,9 +113,14 @@ Note that when the cursor passes over a link in the preview area, a tooltip disp
 
 To use Markdown snippets, activate the plugin *Snippets* in *Edit > Preferences > Plugins*. Then, go to *Tools > Manage Snippets...* to see the possibilities.
 
-### External tool *Export to HTML*
+### Converters (external tools)
 
-To use the external tool, activate the plugin *External Tools* in *Edit > Preferences > Plugins*. Then, go to *Tools > External Tools > Export to HTML* to access the tool. The keyboard shortcut *Ctrl+Alt+h* does the same. The code of the currently opened Markdown file or the selection will be converted in HTML, and the result will be put in a new document.
+The following tools are included:
+
+- Export to HTML
+- Export to PDF
+
+To use the external tool, activate the plugin *External Tools* in *Edit > Preferences > Plugins*. Then, go to *Tools > External Tools > Export to HTML* to access the tool. The keyboard shortcut *Ctrl+Alt+h* does the same. The code of the currently opened Markdown file or the selection will be converted in HTML/PDF, and the result will be put in a new document.
 
 To edit the tool, go to *Tools > Manage External Tools...*.
 
