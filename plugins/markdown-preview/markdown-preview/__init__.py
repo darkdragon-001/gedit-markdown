@@ -171,7 +171,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.actionGroup2 = Gtk.ActionGroup("ToggleTab")
 		action = ("ToggleTab",
 		          None,
-		          _("Toggle Markdown Preview visibility"),
+		          _("Toggle Markdown Preview Visibility"),
 		          markdownVisibilityShortcut,
 		          _("Display or hide the Markdown Preview panel tab"),
 		          lambda x, y: self.toggleTab())
@@ -427,8 +427,8 @@ class MarkdownPreviewMenu(GObject.Object, Gedit.AppActivatable):
 
 		self.tools_menu_ext = self.extend_menu("tools-section")
 		
-		md_prev_update = Gio.MenuItem.new(_("Update Markdown preview"), "win.MarkdownPreview")
-		md_prev_toggle = Gio.MenuItem.new(_("Toggle Markdown preview"), "win.ToggleTab")
+		md_prev_update = Gio.MenuItem.new(_("Update Markdown Preview"), "win.MarkdownPreview")
+		md_prev_toggle = Gio.MenuItem.new(_("Toggle Markdown Preview Visibility"), "win.ToggleTab")
 		
 		self.tools_menu_ext.append_menu_item(md_prev_update)
 		self.tools_menu_ext.append_menu_item(md_prev_toggle)
