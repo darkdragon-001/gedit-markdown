@@ -34,7 +34,8 @@ try:
 	fileDir = os.path.dirname(__file__)
 	localePath = os.path.join(fileDir, "locale")
 	gettext.bindtextdomain(appName, localePath)
-	_ = lambda s: gettext.dgettext(appName, s);
+	gettext.textdomain(appName)
+	_ = gettext.gettext
 except:
 	_ = lambda s: s
 
