@@ -9,20 +9,15 @@ Updates to the original source https://github.com/jpfleury/gedit-markdown:
 
 ## Overview
 
-gedit-markdown adds support for [Markdown][] (or [Markdown Extra][]) in gedit, the default Gnome text editor.
+gedit-markdown adds support for Markdown preview in gedit, the default Gnome text editor.
 
 Specifically, it adds:
 
-- Markdown syntax highlighting and snippets;
+- Markdown snippets;
 
 - plugin *Markdown Preview* for gedit, displayed in the side panel or the bottom panel and previewing in HTML the current document or selection (this plugin can also be used as a Web browser; see section *Usage*);
 
 - an external tool exporting to HTML the current document or selection;
-
-- a color scheme, optional, highlighting Markdown files in a manner more similar to HTML rendering.
-
-[Markdown]: http://daringfireball.net/projects/markdown/
-[Markdown Extra]: http://michelf.com/projects/php-markdown/extra/
 
 ![screenshot1](doc/exemple1.png "Default Markdown syntax highlighting in gedit.")
 
@@ -52,10 +47,6 @@ Markdown support will be added for the current user (so no need root privileges)
 ## Usage
 
 First of all, restart gedit if it's already running.
-
-### Syntax highlighting
-
-Syntax highlighting should automatically be activated for files recognized as Markdown files (extensions `.markdown`, `.md` or `.mkd`), otherwise choose it manually by going to *View > Highlight Mode > Markup* and selecting *Markdown*.
 
 ### Plugin *Markdown Preview*
 
@@ -128,12 +119,6 @@ To use the external tool, activate the plugin *External Tools* in *Edit > Prefer
 
 To edit the tool, go to *Tools > Manage External Tools...*.
 
-### Optional color scheme
-
-An optional color scheme is installed by gedit-markdown. To use it, go to *Edit > Preferences > Font & Colors > Color Scheme* in gedit and select *Classic Markdown*. This color scheme is more similar to an HTML rendering, for example strong emphases and headers are in bold and black font, links are blue and underlined, etc. Here's a screenshot of a Markdown document highlighted with this color scheme:
-
-![screenshot5](doc/exemple2.png "Optional color scheme for Markdown syntax highlighting in gedit.")
-
 ### Configuration file
 
 The configuration file of gedit-markdown is the following:
@@ -159,52 +144,6 @@ The section `markdown-preview` contains several properties:
 - `visibility`: visibility of the Markdown Preview panel tab when gedit starts. Possible values: `0` (hidden) or `1` (displayed; default value).
 
 - `visibilityShortcut`: shortcut to toggle Markdown Preview visibility. The default value is `<Control><Alt>v`.
-
-## Details and limitations
-
-- Syntax highlighting and snippets for standard Markdown were officially added in GtkSourceView and gedit > 3.1.1. The installer of gedit-markdown will ensure that no already existing files are copied (no check is done for Markdown Extra because this is not the default version shipped with GtkSourceView and gedit > 3.1.1).
-
-- Older versions of gedit-markdown also added Markdown MIME type and recognition of an additional extension (`.mdtxt`). Since Markdown support was added directly into the shared MIME database `shared-mime-info` ([see the bug report][bug27441]), gedit-markdown no longer adds its own Markdown MIME type file. Also, for purposes of compliance with the specification, the extension `.mdtxt` is no longer supported.
-
-- Since HTML code can be directly used in a text written in Markdown, HTML syntax highlighting was added to Markdown syntax highlighting. However, keep in mind that, even if they're highlighted, Markdown syntax within HTML blocks (e.g. `<div>`) and Markdown Extra syntax within HTML blocks without `markdown` attribute set to 1 (e.g., `<div markdown="1">`) are not processed.
-
-- Within a paragraph, text wrapped with backticks indicates a code span. Markdown allows to use one or more backticks to wrap text, provided that the number is identical on both sides, and the same number of consecutive backticks is not present within the text. Examples:
-
-		`lorem lorem lorem lorem`
-		
-		`lorem lorem `` lorem lorem`
-		
-		`lorem lorem ````` lorem lorem`
-		
-		``lorem lorem lorem lorem``
-		
-		``lorem lorem ` lorem lorem``
-		
-		``lorem lorem ````` lorem lorem``
-
-	Syntax highlighting in gedit supports code span highlighting with up to 2 backticks surrounding text.
-
-- Blockquote can contain block-level and inline Markdown elements, but gedit-markdown only highlights inline ones (emphasis, link, etc.).
-
-- A full context analysis can't be done (because line break can't be used in regex). Here are some consequences:
-
-	- According to the Markdown syntax, to write several paragraphs in a list item, we have to indent each paragraph. Example:
-
-			- Item A (paragraph 1).
-
-				Item A (paragraph 2).
-
-				Item A (paragraph 3).
-
-			- Item B.
-
-		So there is a conflict in terms of syntax highlighting between an indented paragraph inside a list item (4 spaces or 1 tab) and an indented line of code outside a list (also 4 spaces or 1 tab). The choice was made ​​​​to highlight code block only from 2 levels of indentation.
-
-	- Only the underline of a Setext-style header is matched and highlighted, so there's no guarantee that it's indeed a title underline.
-
-	- With Markdown Extra, some elements are matched and highlighted with no guarantee that they're in the right context: Setext-style header id attribute, colon used as separator in a definition list and separator line of a table.
-
-[bug27441]: https://bugs.freedesktop.org/show_bug.cgi?id=27441
 
 ## Localization
 

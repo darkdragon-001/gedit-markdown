@@ -64,11 +64,9 @@ supprimerGreffon()
 	
 	dossiersVidesAsupprimer+=(
 		"$cheminConfig"
-		"$cheminLanguageSpecs"
 		"$cheminPlugins"
 		"$cheminPluginsMarkdownPreview"
 		"$cheminSnippets"
-		"$cheminStyles"
 		"$cheminTools"
 	)
 	
@@ -93,18 +91,13 @@ normal=$(tput sgr0)
 ####################################
 
 if [[ -n $XDG_DATA_HOME ]]; then
-	cheminLanguageSpecs=$XDG_DATA_HOME/gtksourceview-3.0/language-specs
 	cheminPlugins=$XDG_DATA_HOME/gedit/plugins
 	cheminPluginsMarkdownPreview=$XDG_DATA_HOME/gedit/plugins/markdown-preview
-	cheminStyles=$XDG_DATA_HOME/gtksourceview-3.0/styles
 else
-	cheminLanguageSpecs=$HOME/.local/share/gtksourceview-3.0/language-specs
 	cheminPlugins=$HOME/.local/share/gedit/plugins
 	cheminPluginsMarkdownPreview=$HOME/.local/share/gedit/plugins/markdown-preview
-	cheminStyles=$HOME/.local/share/gtksourceview-3.0/styles
 fi
 
-cheminSystemeLanguageSpecs=/usr/share/gtksourceview-3.0/language-specs
 cheminSystemeSnippets=/usr/share/gedit/plugins/snippets
 
 if [[ -n $XDG_CONFIG_HOME ]]; then
@@ -128,12 +121,8 @@ cheminFichierConfig=$cheminConfig/gedit-markdown.ini
 ####################################
 
 fichiersAsupprimer=(
-	"$cheminLanguageSpecs/markdown.lang"
-	"$cheminLanguageSpecs/markdown-extra.lang"
 	"$cheminPlugins/markdown-preview.gedit-plugin"
 	"$cheminSnippets/markdown.xml"
-	"$cheminSnippets/markdown-extra.xml"
-	"$cheminStyles/classic-markdown.xml"
 	"$cheminTools/export-to-html"
 	"$cheminTools/export-to-pdf"
 )
@@ -157,14 +146,11 @@ if [[ $1 == install ]]; then
 	supprimerGreffon
 	
 	# Création des répertoires s'ils n'existent pas déjà.
-	mkdir -pv "$cheminConfig" "$cheminLanguageSpecs" "$cheminPlugins" "$cheminSnippets" \
-		"$cheminStyles"
+	mkdir -pv "$cheminConfig" "$cheminPlugins" "$cheminSnippets"
 	
 	# Copie des fichiers.
 	cp -v config/gedit-markdown.ini "$cheminFichierConfig"
-	cp -v language-specs/markdown-extra.lang "$cheminLanguageSpecs"
-	cheminLanguageSpecsMarkdownLang=$cheminLanguageSpecs/markdown-extra.lang
-	cp -v snippets/markdown-extra.xml "$cheminSnippets"
+	cp -v snippets/markdown.xml "$cheminSnippets"
 	
 	# Outil externe.
 	mkdir -pv "$cheminTools"
@@ -177,8 +163,6 @@ if [[ $1 == install ]]; then
 	cp -rv plugins/markdown-preview/* "$cheminPlugins"
 	rm -v "$cheminPluginsMarkdownPreview/locale/markdown-preview.pot"
 	find "$cheminPluginsMarkdownPreview/locale/" -name "*.po" -exec rm -vf {} \;
-	
-	cp -v styles/classic-markdown.xml "$cheminStyles"
 	
 	echo "$gras"
 	echo "Installation successful. Please restart gedit (if it's already running)."
