@@ -31,12 +31,12 @@ isEmpty()
 		shopt -s nullglob dotglob
 		files=("$1"/*)
 		shopt -u nullglob dotglob
-		
+
 		if [[ ${#files[@]} == 0 ]]; then
 			return 0
 		fi
 	fi
-	
+
 	return 1
 }
 
@@ -56,12 +56,12 @@ supprimerGreffon()
 	for fichier in "${fichiersAsupprimer[@]}"; do
 		rm -vf "$fichier"
 	done
-	
+
 	# Suppression des dossiers.
-	
+
 	rm -rfv "$cheminPluginsMarkdownPreview"
 	dossiersVidesAsupprimer=()
-	
+
 	dossiersVidesAsupprimer+=(
 		"$cheminConfig"
 		"$cheminPlugins"
@@ -69,7 +69,7 @@ supprimerGreffon()
 		"$cheminSnippets"
 		"$cheminTools"
 	)
-	
+
 	supprimerDossiersVides "${dossiersVidesAsupprimer[@]}"
 }
 
@@ -144,30 +144,30 @@ if [[ $1 == install ]]; then
 	echo
 	# Au cas où il s'agit d'une mise à jour et non d'une première installation.
 	supprimerGreffon
-	
+
 	# Création des répertoires s'ils n'existent pas déjà.
 	mkdir -pv "$cheminConfig" "$cheminPlugins" "$cheminSnippets"
-	
+
 	# Copie des fichiers.
 	cp -v config/gedit-markdown.ini "$cheminFichierConfig"
 	cp -v snippets/markdown.xml "$cheminSnippets"
-	
+
 	# Outil externe.
 	mkdir -pv "$cheminTools"
 	cp -v tools/export-to-html "$cheminTools"
 	chmod +x "$cheminTools/export-to-html"
 	cp -v tools/export-to-pdf "$cheminTools"
 	chmod +x "$cheminTools/export-to-pdf"
-	
+
 	# Greffon «Aperçu Markdown».
 	cp -rv plugins/markdown-preview/* "$cheminPlugins"
 	rm -v "$cheminPluginsMarkdownPreview/locale/markdown-preview.pot"
 	find "$cheminPluginsMarkdownPreview/locale/" -name "*.po" -exec rm -vf {} \;
-	
+
 	echo "$gras"
 	echo "Installation successful. Please restart gedit (if it's already running)."
 	echo "$normal"
-	
+
 	exit 0
 elif [[ $1 == uninstall ]]; then
 	echo "############################################################"
@@ -180,12 +180,12 @@ elif [[ $1 == uninstall ]]; then
 	echo "$gras"
 	echo "Uninstallation successful. Please restart gedit (if it's already running)."
 	echo "$normal"
-	
+
 	exit 0
 else
 	echo "$gras"
 	echo "Usage: $0 [install|uninstall]"
 	echo "$normal"
-	
+
 	exit 1
 fi

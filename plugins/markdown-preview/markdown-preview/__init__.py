@@ -98,16 +98,16 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	window = GObject.property(type=Gedit.Window)
 	currentUri = ""
 	overLinkUrl = ""
-	
+
 	def __init__(self):
 		GObject.Object.__init__(self)
-	
+
 	def do_activate(self):
 		self.scrolledWindow = Gtk.ScrolledWindow()
 		self.scrolledWindow.set_property("hscrollbar-policy", Gtk.PolicyType.AUTOMATIC)
 		self.scrolledWindow.set_property("vscrollbar-policy", Gtk.PolicyType.AUTOMATIC)
 		self.scrolledWindow.set_property("shadow-type", Gtk.ShadowType.IN)
-		
+
 		self.htmlView = WebKit2.WebView()
 		# TODO connect signals: https://lazka.github.io/pgi-docs/#WebKit2-4.0/classes/WebView.html#signals
 		# TODO replace by signal "mouse-target-changed"
@@ -118,15 +118,15 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		# TODO replace by signal "script-dialog"
 		#self.htmlView.connect("populate-popup", self.onPopulatePopupCb)
 		self.htmlView.load_html((htmlTemplate % ("", )), "file:///")
-		
+
 		self.scrolledWindow.add(self.htmlView)
 		self.scrolledWindow.show_all()
-		
+
 		if markdownVisibility == "1":
 			self.addMarkdownPreviewTab()
-		
+
 		self.addWindowActions()
-	
+
 	def do_deactivate(self):
 		# Remove menu items.
 		self.window.remove_action('MarkdownPreview')
@@ -143,27 +143,27 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 	def do_update_state(self):
 		self.actionGroup1.set_sensitive(self.window.get_active_document() != None)
-	
+
 	def addMarkdownPreviewTab(self):
 		if markdownPanel == "side":
 			panel = self.window.get_side_panel()
 		else:
 			panel = self.window.get_bottom_panel()
-		
+
 		panel.add_titled(self.scrolledWindow, "MarkdownPreview", _("Markdown Preview"))
 		panel.show()
 		panel.set_visible_child(self.scrolledWindow)
 
 	def addWindowActions(self):
-	
+
 		self.action_update = Gio.SimpleAction(name='MarkdownPreview')
 		self.action_update.connect('activate', lambda x, y: self.updatePreview(y, False))
 		self.window.add_action(self.action_update)
-		
+
 		self.action_toggle = Gio.SimpleAction(name='ToggleTab')
 		self.action_toggle.connect('activate', lambda x, y: self.toggleTab())
 		self.window.add_action(self.action_toggle)
-		
+
 		self.actionGroup1 = Gtk.ActionGroup("UpdateMarkdownPreview")
 		action = ("MarkdownPreview",
 		          None,
@@ -173,7 +173,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		          lambda x, y: self.updatePreview(y, False))
 		#self.actionGroup1.add_actions([action], self.window)
 		#self.window.insert_action_group('win', self.actionGroup1)
-		
+
 		self.actionGroup2 = Gtk.ActionGroup("ToggleTab")
 		action = ("ToggleTab",
 		          None,
@@ -183,21 +183,21 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		          lambda x, y: self.toggleTab())
 		#self.actionGroup2.add_actions([action], self.window)
 		#self.window.insert_action_group('win', self.actionGroup2)
-		
-	
+
+
 	def copyCurrentUrl(self):
 		self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 		self.clipboard.set_text(self.currentUri, -1)
-	
+
 	def goToAnotherUrl(self):
 		newUrl = self.goToAnotherUrlDialog()
-		
+
 		if newUrl:
 			if newUrl.startswith("/"):
 				newUrl = "file://" + newUrl
-			
+
 			self.htmlView.load_uri(newUrl)
-	
+
 	def goToAnotherUrlDialog(self):
 		dialog = Gtk.MessageDialog(None,
 		                           Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
@@ -206,104 +206,104 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		                           _("Enter URL"))
 		dialog.set_title(_("Enter URL"))
 		dialog.format_secondary_markup(_("Enter the URL (local or distant) of the document or page to display."))
-		
+
 		entry = Gtk.Entry()
 		entry.connect("activate", self.onGoToAnotherUrlDialogActivateCb, dialog,
 		              Gtk.ResponseType.OK)
-		
+
 		dialog.vbox.pack_end(entry, True, True, 0)
 		dialog.show_all()
-		
+
 		response = dialog.run()
-		
+
 		newUrl = ""
-		
+
 		if response == Gtk.ResponseType.OK:
 			newUrl = entry.get_text()
-		
+
 		dialog.destroy()
-		
+
 		return newUrl
-	
+
 	def onGoToAnotherUrlDialogActivateCb(self, entry, dialog, response):
 		dialog.response(response)
-	
+
 	def onHoveringOverLinkCb(self, page, title, url):
 		if url and not self.overLinkUrl:
 			self.overLinkUrl = url
-			
+
 			self.urlTooltip = Gtk.Window.new(Gtk.WindowType.POPUP)
 			self.urlTooltip.set_border_width(2)
 			self.urlTooltip.modify_bg(0, Gdk.color_parse("#d9d9d9"))
-			
+
 			label = Gtk.Label()
 			text = (url[:75] + "...") if len(url) > 75 else url
 			label.set_text(text)
 			label.modify_fg(0, Gdk.color_parse("black"))
 			self.urlTooltip.add(label)
 			label.show()
-			
+
 			self.urlTooltip.show()
-			
+
 			xPointer, yPointer = self.urlTooltip.get_pointer()
-			
+
 			xWindow = self.window.get_position()[0]
 			widthWindow = self.window.get_size()[0]
-			
+
 			widthUrlTooltip = self.urlTooltip.get_size()[0]
 			xUrlTooltip = xPointer
 			yUrlTooltip = yPointer + 15
-			
+
 			xOverflow = (xUrlTooltip + widthUrlTooltip) - (xWindow + widthWindow)
-			
+
 			if xOverflow > 0:
 				xUrlTooltip = xUrlTooltip - xOverflow
-			
+
 			self.urlTooltip.move(xUrlTooltip, yUrlTooltip)
 		else:
 			self.overLinkUrl = ""
-			
+
 			if self.urlTooltipVisible():
 				self.urlTooltip.destroy()
-	
+
 	def onNavigationPolicyDecisionRequestedCb(self, view, frame, networkRequest,
 	                                          navAct, polDec):
 		self.currentUri = networkRequest.get_uri()
-		
+
 		if self.currentUri == "file:///":
 			activeDocument = self.window.get_active_document()
-			
+
 			if activeDocument:
 				uriActiveDocument = activeDocument.get_uri_for_display()
-				
+
 				# Make sure we have an absolute path (so the file exists).
 				if uriActiveDocument.startswith("/"):
 					self.currentUri = uriActiveDocument
-		
+
 		if navAct.get_reason().value_nick == "link-clicked" and markdownExternalBrowser == "1":
 			webbrowser.open_new_tab(self.currentUri)
-			
+
 			if self.urlTooltipVisible():
 				self.urlTooltip.destroy()
-			
+
 			polDec.ignore()
-		
+
 		return False
-	
+
 	def openInEmbeddedBrowser(self):
 		self.htmlView.load_uri(self.overLinkUrl)
-	
+
 	def openInExternalBrowser(self):
 		webbrowser.open_new_tab(self.overLinkUrl)
-	
+
 	def onPopulatePopupCb(self, view, menu):
 		if self.urlTooltipVisible():
 			self.urlTooltip.destroy()
-		
+
 		for item in menu.get_children():
 			try:
 				icon = item.get_image().get_stock()[0]
-				
+
 				if (icon == "gtk-copy" or icon == "gtk-go-back" or
 				    icon == "gtk-go-forward" or icon == "gtk-stop"):
 					continue
@@ -314,7 +314,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 					menu.remove(item)
 			except:
 				menu.remove(item)
-		
+
 		if self.overLinkUrl:
 			if markdownExternalBrowser == "1":
 				item = Gtk.MenuItem(label=_("Open in the embedded browser"))
@@ -322,99 +322,99 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			else:
 				item = Gtk.MenuItem(label=_("Open in an external browser"))
 				item.connect("activate", lambda x: self.openInExternalBrowser())
-			
+
 			menu.append(item)
-		
+
 		item = Gtk.MenuItem(label=_("Copy the current URL"))
 		item.connect("activate", lambda x: self.copyCurrentUrl())
-		
+
 		if self.currentUri == "file:///":
 			item.set_sensitive(False)
-		
+
 		menu.append(item)
-		
+
 		item = Gtk.MenuItem(label=_("Go to another URL"))
 		item.connect("activate", lambda x: self.goToAnotherUrl())
 		menu.append(item)
-		
+
 		item = Gtk.MenuItem(label=_("Update Preview"))
 		item.connect("activate", lambda x: self.updatePreview(self, False))
-		
+
 		documents = self.window.get_documents()
-		
+
 		if not documents:
 			item.set_sensitive(False)
-		
+
 		menu.append(item)
-		
+
 		item = Gtk.MenuItem(label=_("Clear Preview"))
 		item.connect("activate", lambda x: self.updatePreview(self, True))
 		menu.append(item)
-		
+
 		menu.show_all()
-	
+
 	def removeMarkdownPreviewTab(self):
 		if markdownPanel == "side":
 			panel = self.window.get_side_panel()
 		else:
 			panel = self.window.get_bottom_panel()
-		
+
 		panel.remove(self.scrolledWindow)
-	
+
 	def toggleTab(self):
 		if markdownPanel == "side":
 			panel = self.window.get_side_panel()
 		else:
 			panel = self.window.get_bottom_panel()
-		
+
 		if panel.get_visible_child() == self.scrolledWindow:
 			self.removeMarkdownPreviewTab()
 		else:
 			self.addMarkdownPreviewTab()
-	
+
 	def updatePreview(self, window, clear):
 		view = self.window.get_active_view()
-		
+
 		if not view and not clear:
 			return
-		
+
 		html = ""
-		
+
 		if not clear:
 			doc = view.get_buffer()
 			start = doc.get_start_iter()
 			end = doc.get_end_iter()
-			
+
 			if doc.get_selection_bounds():
 				start = doc.get_iter_at_mark(doc.get_insert())
 				end = doc.get_iter_at_mark(doc.get_selection_bound())
-			
+
 			text = doc.get_text(start, end, True)
-			
+
 			html = htmlTemplate % (markdown.markdown(text, extensions=markdownExtensionsList), )
-		
+
 		placement = self.scrolledWindow.get_placement()
-		
+
 		htmlDoc = self.htmlView
 		htmlDoc.load_html(html, "file:///")
-		
+
 		self.scrolledWindow.set_placement(placement)
-		
+
 		if markdownPanel == "side":
 			panel = self.window.get_side_panel()
 		else:
 			panel = self.window.get_bottom_panel()
-		
+
 		panel.show()
-		
+
 		if not panel.get_visible_child() == self.scrolledWindow:
 			self.addMarkdownPreviewTab()
 			panel.set_visible_child(self.scrolledWindow)
-	
+
 	def urlTooltipVisible(self):
 		if hasattr(self, "urlTooltip") and self.urlTooltip.get_property("visible"):
 			return True
-		
+
 		return False
 
 class MarkdownPreviewMenu(GObject.Object, Gedit.AppActivatable):
@@ -428,10 +428,10 @@ class MarkdownPreviewMenu(GObject.Object, Gedit.AppActivatable):
 		self.app.set_accels_for_action("win.ToggleTab", [markdownVisibilityShortcut])
 
 		self.tools_menu_ext = self.extend_menu("tools-section")
-		
+
 		md_prev_update = Gio.MenuItem.new(_("Update Markdown Preview"), "win.MarkdownPreview")
 		md_prev_toggle = Gio.MenuItem.new(_("Toggle Markdown Preview Visibility"), "win.ToggleTab")
-		
+
 		self.tools_menu_ext.append_menu_item(md_prev_update)
 		self.tools_menu_ext.append_menu_item(md_prev_toggle)
 
@@ -440,4 +440,3 @@ class MarkdownPreviewMenu(GObject.Object, Gedit.AppActivatable):
 		self.app.set_accels_for_action("win.ToggleTab", [])
 
 		self.tools_menu_ext = None
-
