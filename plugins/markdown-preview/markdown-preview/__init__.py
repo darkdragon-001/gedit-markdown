@@ -52,7 +52,7 @@ htmlTemplate = """
 markdownExternalBrowser = "0"
 markdownPanel = "bottom"
 markdownShortcut = "<Control><Alt>m"
-markdownVersion = "extra"
+markdownExtensions = "extra toc"
 markdownVisibility = "1"
 markdownVisibilityShortcut = "<Control><Alt>v"
 
@@ -73,7 +73,7 @@ parser.add_section("markdown-preview")
 parser.set("markdown-preview", "externalBrowser", markdownExternalBrowser)
 parser.set("markdown-preview", "panel", markdownPanel)
 parser.set("markdown-preview", "shortcut", markdownShortcut)
-parser.set("markdown-preview", "version", markdownVersion)
+parser.set("markdown-preview", "extensions", markdownExtensions)
 parser.set("markdown-preview", "visibility", markdownVisibility)
 parser.set("markdown-preview", "visibilityShortcut", markdownVisibilityShortcut)
 
@@ -82,7 +82,8 @@ if os.path.isfile(confFile):
 	markdownExternalBrowser = parser.get("markdown-preview", "externalBrowser")
 	markdownPanel = parser.get("markdown-preview", "panel")
 	markdownShortcut = parser.get("markdown-preview", "shortcut")
-	markdownVersion = parser.get("markdown-preview", "version")
+	markdownExtensions = parser.get("markdown-preview", "extensions")
+	markdownExtensionsList = markdownExtensions.split()
 	markdownVisibility = parser.get("markdown-preview", "visibility")
 	markdownVisibilityShortcut = parser.get("markdown-preview", "visibilityShortcut")
 
@@ -390,11 +391,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			
 			text = doc.get_text(start, end, True)
 			
-			if markdownVersion == "standard":
-				html = htmlTemplate % (markdown.markdown(text, smart_emphasis=False), )
-			else:
-				html = htmlTemplate % (markdown.markdown(text, extensions=["extra",
-				       "headerid(forceid=False)"]), )
+			html = htmlTemplate % (markdown.markdown(text, extensions=markdownExtensionsList), )
 		
 		placement = self.scrolledWindow.get_placement()
 		

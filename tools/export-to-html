@@ -32,15 +32,12 @@ parser = SafeConfigParser()
 
 if os.path.isfile(confFile):
 	parser.read(confFile)
-	markdownVersion = parser.get("markdown-preview", "version")
+	markdownExtensions = parser.get("markdown-preview", "extensions")
 else:
-	markdownVersion = "extra"
+	markdownExtensions = "extra toc"
+markdownExtensionsList = markdownExtensions.split()
 
 text = sys.stdin.read()
 print("<!-- Markdown => HTML -->")
 
-if markdownVersion == "standard":
-	print(markdown.markdown(text, smart_emphasis=False))
-else:
-	print(markdown.markdown(text, extensions=["extra",
-	                        "headerid(forceid=False)"]))
+print(markdown.markdown(text, extensions=markdownExtensionsList))

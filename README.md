@@ -109,6 +109,10 @@ Note that when the cursor passes over a link in the preview area, a tooltip disp
 
 ![screenshot](doc/exemple5.png "Tooltip displaying URL when the cursor passes over a link.")
 
+### Table of contents
+
+When the Markdown extension `toc` is enabled (see _Configuration file_, default), add `[TOC]` to your Markdown source to generate a table of contents with clickable links.
+
 ### Snippets
 
 To use Markdown snippets, activate the plugin *Snippets* in *Edit > Preferences > Plugins*. Then, go to *Tools > Manage Snippets...* to see the possibilities.
@@ -150,7 +154,7 @@ The section `markdown-preview` contains several properties:
 
 - `shortcut`: shortcut to refresh the preview. The default value is `<Control><Alt>m`.
 
-- `version`: the Markdown version to use for the HTML preview and to export to HTML. Possible values: `extra` (default value) or `standard`.
+- `extensions`: a whitespace separated list of [Markdown extensions](https://python-markdown.github.io/extensions/#officially-supported-extensions). See link for possible values. Defaults to "extra toc".
 
 - `visibility`: visibility of the Markdown Preview panel tab when gedit starts. Possible values: `0` (hidden) or `1` (displayed; default value).
 
