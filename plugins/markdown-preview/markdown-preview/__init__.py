@@ -26,7 +26,7 @@ import os
 import sys
 import markdown
 import gettext
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 import webbrowser
 
 try:
@@ -67,7 +67,7 @@ else:
 confDir =  os.path.join(xdgConfigHome, "gedit")
 confFile =  os.path.join(confDir, "gedit-markdown.ini")
 
-parser = SafeConfigParser()
+parser = ConfigParser()
 parser.optionxform = str
 parser.add_section("markdown-preview")
 parser.set("markdown-preview", "externalBrowser", markdownExternalBrowser)
