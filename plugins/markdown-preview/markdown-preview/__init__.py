@@ -21,7 +21,6 @@
 import gi
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gdk, Gtk, GtkSource, Gedit, GObject, WebKit2, Gio
-import codecs
 import os
 import sys
 import markdown
@@ -144,6 +143,9 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.window.disconnect(self.handleTabStateChanged)
 		self.removeBufferSignals()
 
+
+	# Windows and Signals
+
 	def addMarkdownPreviewTab(self):
 		if markdownPanel == "side":
 			panel = self.window.get_side_panel()
@@ -153,6 +155,25 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		panel.add_titled(self.scrolledWindow, "MarkdownPreview", _("Markdown Preview"))
 		panel.show()
 		panel.set_visible_child(self.scrolledWindow)
+
+	def removeMarkdownPreviewTab(self):
+		if markdownPanel == "side":
+			panel = self.window.get_side_panel()
+		else:
+			panel = self.window.get_bottom_panel()
+
+		panel.remove(self.scrolledWindow)
+
+	def toggleTab(self):
+		if markdownPanel == "side":
+			panel = self.window.get_side_panel()
+		else:
+			panel = self.window.get_bottom_panel()
+
+		if panel.get_visible_child() == self.scrolledWindow:
+			self.removeMarkdownPreviewTab()
+		else:
+			self.addMarkdownPreviewTab()
 
 	def addWindowActions(self):
 		self.action_update = Gio.SimpleAction(name='MarkdownPreview')
@@ -182,6 +203,43 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			del self.handleMarkSet
 			del self.handleDocumentLoaded
 
+	def urlTooltipCreate(self, url):
+		self.urlTooltip = Gtk.Window.new(Gtk.WindowType.POPUP)
+		self.urlTooltip.set_border_width(2)
+		self.urlTooltip.modify_bg(0, Gdk.color_parse("#d9d9d9"))
+
+		label = Gtk.Label()
+		text = (url[:75] + "...") if len(url) > 75 else url
+		label.set_text(text)
+		label.modify_fg(0, Gdk.color_parse("black"))
+		self.urlTooltip.add(label)
+		label.show()
+
+		self.urlTooltip.show()
+
+		xPointer, yPointer = self.urlTooltip.get_pointer()
+
+		xWindow = self.window.get_position()[0]
+		widthWindow = self.window.get_size()[0]
+
+		widthUrlTooltip = self.urlTooltip.get_size()[0]
+		xUrlTooltip = xPointer
+		yUrlTooltip = yPointer + 15
+
+		xOverflow = (xUrlTooltip + widthUrlTooltip) - (xWindow + widthWindow)
+
+		if xOverflow > 0:
+			xUrlTooltip = xUrlTooltip - xOverflow
+
+		self.urlTooltip.move(xUrlTooltip, yUrlTooltip)
+
+	def urlTooltipDestroy(self):
+		if hasattr(self, "urlTooltip") and self.urlTooltip.get_property("visible"):
+			self.urlTooltip.destroy()
+
+
+	# Callbacks
+
 	def onTabChangedCb(self, *args):
 		self.addBufferSignals()
 
@@ -206,43 +264,10 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.updatePreview()
 
 	def onMouseTargetChangedCb(self, view, hitTestResult, modifiers):
+		self.urlTooltipDestroy()
+
 		if hitTestResult.context_is_link():
-			url = hitTestResult.get_link_uri()
-			self.overLinkUrl = url
-
-			self.urlTooltip = Gtk.Window.new(Gtk.WindowType.POPUP)
-			self.urlTooltip.set_border_width(2)
-			self.urlTooltip.modify_bg(0, Gdk.color_parse("#d9d9d9"))
-
-			label = Gtk.Label()
-			text = (url[:75] + "...") if len(url) > 75 else url
-			label.set_text(text)
-			label.modify_fg(0, Gdk.color_parse("black"))
-			self.urlTooltip.add(label)
-			label.show()
-
-			self.urlTooltip.show()
-
-			xPointer, yPointer = self.urlTooltip.get_pointer()
-
-			xWindow = self.window.get_position()[0]
-			widthWindow = self.window.get_size()[0]
-
-			widthUrlTooltip = self.urlTooltip.get_size()[0]
-			xUrlTooltip = xPointer
-			yUrlTooltip = yPointer + 15
-
-			xOverflow = (xUrlTooltip + widthUrlTooltip) - (xWindow + widthWindow)
-
-			if xOverflow > 0:
-				xUrlTooltip = xUrlTooltip - xOverflow
-
-			self.urlTooltip.move(xUrlTooltip, yUrlTooltip)
-		else:
-			self.overLinkUrl = ""
-
-			if self.urlTooltipVisible():
-				self.urlTooltip.destroy()
+			self.urlTooltipCreate(hitTestResult.get_link_uri())
 
 	def onDecidePolicyCb(self, view, decision, decisionType):
 		if decisionType == WebKit2.PolicyDecisionType.NAVIGATION_ACTION: # type(decision) == WebKit2.NavigationPolicyDecision
@@ -257,6 +282,8 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 				else:
 					# render other local files
 					lang = GtkSource.LanguageManager.get_default().guess_language(currentUri, None)
+					if lang is None:
+						self.render()
 					if lang.get_id() == "html":
 						decision.use()
 					elif lang.get_id() == "markdown":
@@ -268,8 +295,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			else:
 				# open in new browser tab
 				webbrowser.open_new_tab(currentUri)
-				if self.urlTooltipVisible():
-					self.urlTooltip.destroy()
+				self.urlTooltipDestroy()
 				decision.ignore()
 		elif decisionType == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:  # type(decision) == WebKit2.NavigationPolicyDecision
 			# Forbid new windows
@@ -284,8 +310,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		return True
 
 	def onContextMenuCb(self, view, menu, event, hitTestResult):
-		if self.urlTooltipVisible():
-			self.urlTooltip.destroy()
+		self.urlTooltipDestroy()
 
 		for item in menu.get_items():
 			try:
@@ -303,24 +328,8 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		item = WebKit2.ContextMenuItem.new_from_gaction(self.action_update, _("Update Preview"))
 		menu.append(item)
 
-	def removeMarkdownPreviewTab(self):
-		if markdownPanel == "side":
-			panel = self.window.get_side_panel()
-		else:
-			panel = self.window.get_bottom_panel()
 
-		panel.remove(self.scrolledWindow)
-
-	def toggleTab(self):
-		if markdownPanel == "side":
-			panel = self.window.get_side_panel()
-		else:
-			panel = self.window.get_bottom_panel()
-
-		if panel.get_visible_child() == self.scrolledWindow:
-			self.removeMarkdownPreviewTab()
-		else:
-			self.addMarkdownPreviewTab()
+	# Rendering
 
 	def updatePreview(self, *args):
 		view = self.window.get_active_view()
@@ -355,8 +364,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		if activeUri is None:
 			activeUri = "file:///"
 
-		if self.urlTooltipVisible():
-			self.urlTooltip.destroy()
+		self.urlTooltipDestroy()
 
 		placement = self.scrolledWindow.get_placement()
 
@@ -377,11 +385,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		# special cases: "file:///", "Untitled Document"
 		return uri.rpartition("/")[0]+"/"
 
-	def urlTooltipVisible(self):
-		if hasattr(self, "urlTooltip") and self.urlTooltip.get_property("visible"):
-			return True
-
-		return False
 
 class MarkdownPreviewMenu(GObject.Object, Gedit.AppActivatable):
 	app = GObject.property(type=Gedit.App)

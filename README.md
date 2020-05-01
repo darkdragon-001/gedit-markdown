@@ -1,11 +1,11 @@
-Updates to the original source https://github.com/jpfleury/gedit-markdown:
+# Gedit Markdown Preview v3
 
-- works in newer gedit versions (tested on 3.22)
-- added custom stylesheet for Markdown Preview, see screenshot bellow
+**Note:** This version requires gedit 3.28 and WebKit**2** (`gir1.2-webkit2-4.0`).
 
----
+**Old versions:**
 
-**Note: if you use gedit 2 or gedit 3.0 to 3.6, please refer to the [documentation of gedit-markdown v1](https://github.com/jpfleury/gedit-markdown/tree/v1#readme). Below is the documentation of the version 2 for gedit 3.8 and 3.10.**
+- For gedit 2 or gedit 3.0 to 3.6, please refer to the [documentation of gedit-markdown v1](https://github.com/darkdragon-001/gedit-markdown/tree/v1#readme). 
+- For gedit 3.8 and 3.10 with WebKit (`gir1.2-webkit-3.0`), please refer to the [documentation of gedit-markdown v2](https://github.com/darkdragon-001/gedit-markdown/tree/v2#readme).
 
 ## Overview
 
@@ -13,32 +13,35 @@ gedit-markdown adds support for Markdown preview in gedit, the default Gnome tex
 
 Specifically, it adds:
 
-- Markdown snippets;
+- Markdown *snippets*
 
-- plugin *Markdown Preview* for gedit, displayed in the side panel or the bottom panel and previewing in HTML the current document or selection;
+- plugin *Markdown Preview* for gedit, displayed in the side panel or the bottom panel and previewing in HTML the current document or selection
 
-- an external tool exporting to HTML the current document or selection;
+- an *external tool* for exporting to HTML or PDF the current document or selection
 
 ![screenshot1](doc/exemple1.png "Default Markdown syntax highlighting in gedit.")
 
 ## Requirements
 
-- gedit-markdown v2 supports gedit 3.8 and 3.10. It's shipped with an installer for GNU/Linux.
+- gedit-markdown v3 supports gedit 3.28. It's shipped with an installer for GNU/Linux.
 
-- The plugin *Markdown Preview* depends on the package `python3-markdown`.
-
-- For users of Ubuntu (and maybe other distributions) 11.10 or later, the package `gir1.2-webkit-3.0` must be installed to use the plugin *Markdown Preview*.
+- The plugin *Markdown Preview* depends on the package `python3-markdown` and `gir1.2-webkit2-4.0`.
 
 ## Installation (or update)
 
-- download and extract the repo
-- `$ ./gedit-markdown.sh install`
+- Open a terminal
 
-Markdown support will be added for the current user (so no need root privileges). The folder created by the extraction can be deleted after installation.
+- Run the following commands in the terminal:
+
+		git clone https://github.com/darkdragon-001/gedit-markdown.git
+		cd gedit-markdown
+		./gedit-markdown.sh install
+
+Markdown support will be added for the current user (so no need root privileges). The folder created can be deleted after installation.
 
 ## Uninstallation
 
-- Open a terminal in the extracted folder.
+- Open a terminal in the project folder.
 
 - Run the uninstaller in the terminal:
 
@@ -77,8 +80,6 @@ Here's a screenshot of the plugin when it's displayed in the bottom panel:
 ![screenshot](doc/exemple3.png "Markdown Preview in the bottom panel of gedit.")
 
 Now the same plugin displayed in the side panel (click to see the original image):
-
-![screenshot](doc/exemple4.png "")
 
 [![screenshot][2]][1]
 
@@ -135,28 +136,15 @@ The section `markdown-preview` contains several properties:
 
 - `autoReloadSelection`: automatically reload the preview when the selection is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
 
+### Examples
+
+- [Demo 1](doc/demo-markdown.md)
+- [Demo 2](doc/demo-markdown-extra.md)
+
 ## Localization
 
 The plugin *Markdown Preview* is localizable. The file containing strings is `plugins/markdown-preview/locale/markdown-preview.pot`.
 
-## License
-
-Author: Jean-Philippe Fleury (<http://www.jpfleury.net/en/contact.php>)  
-Copyright © 2009 Jean-Philippe Fleury
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 ### Third-party code
 
-The plugin *Markdown Preview* shipped with gedit-markdown is a modification of the [plugin of the same name written by Michele Campeotto](https://wiki.gnome.org/Apps/Gedit/MarkdownSupport), under the GPL v2 or any later version.
+The plugin *Markdown Preview* shipped with gedit-markdown is a modification of the [plugin of the same name written by Jean-Philippe Fleury](https://github.com/jpfleury/gedit-markdown), under the GPL v3 or any later version.
