@@ -376,6 +376,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			return
 
 		html = ""
+		activeUri = "file:///"
 
 		if not clear:
 			doc = view.get_buffer()
@@ -390,10 +391,12 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 			html = htmlTemplate % (markdown.markdown(text, extensions=markdownExtensionsList), )
 
+			activeUri = "file://"+self.window.get_active_document().get_uri_for_display()  # Absolute paths when existing file
+
 		placement = self.scrolledWindow.get_placement()
 
 		htmlDoc = self.htmlView
-		htmlDoc.load_html(html, "file:///")
+		self.htmlView.load_alternate_html(html, activeUri, self.uriToBase(activeUri))
 
 		self.scrolledWindow.set_placement(placement)
 
@@ -407,6 +410,10 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		if not panel.get_visible_child() == self.scrolledWindow:
 			self.addMarkdownPreviewTab()
 			panel.set_visible_child(self.scrolledWindow)
+
+	def uriToBase(self, uri):
+		# special cases: "file:///", "Untitled Document"
+		return uri.rpartition("/")[0]+"/"
 
 	def urlTooltipVisible(self):
 		if hasattr(self, "urlTooltip") and self.urlTooltip.get_property("visible"):
