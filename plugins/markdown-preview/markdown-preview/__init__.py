@@ -249,25 +249,27 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			polDecType == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION): # type(polDec) == WebKit2.NavigationPolicyDecision
 			networkRequest = polDec.get_request()
 			navType = polDec.get_navigation_type()
-			self.currentUri = networkRequest.get_uri()
+			ignore = False
+			currentUri = networkRequest.get_uri()
 
-			if self.currentUri.startswith("file:///"):
-				activeDocument = self.window.get_active_document()
+			if currentUri.startswith("file://"):
+				# local file
+				if currentUri == "file://"+self.window.get_active_document().get_uri_for_display():
+					# Ignore navigation to current document (should be markdown rendered instead)
+					polDec.ignore()
+					ignore = True
 
-				if activeDocument:
-					uriActiveDocument = activeDocument.get_uri_for_display()
-
-					# Make sure we have an absolute path (so the file exists).
-					if uriActiveDocument.startswith("/"):
-						self.currentUri = "file://"+uriActiveDocument
-
-			if navType == WebKit2.NavigationType.LINK_CLICKED and markdownExternalBrowser == "1":
-				webbrowser.open_new_tab(self.currentUri)
+			elif navType == WebKit2.NavigationType.LINK_CLICKED and markdownExternalBrowser == "1":
+				webbrowser.open_new_tab(currentUri)
 
 				if self.urlTooltipVisible():
 					self.urlTooltip.destroy()
 
 				polDec.ignore()
+				ignore = True
+
+			if not ignore:
+				self.currentUri = currentUri
 		elif polDecType == WebKit2.PolicyDecisionType.RESPONSE:  # type(decision) == WebKit2.ResponsePolicyDecision
 			# Allow all responses
 			polDec.use()
