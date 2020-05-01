@@ -51,6 +51,8 @@ markdownShortcut = "<Control><Alt>m"
 markdownExtensions = "extra toc"
 markdownVisibility = "1"
 markdownVisibilityShortcut = "<Control><Alt>v"
+markdownAutoReload = "1"
+markdownAutoReloadSelection = "1"
 
 try:
 	import xdg.BaseDirectory
@@ -71,6 +73,8 @@ parser.set("markdown-preview", "shortcut", markdownShortcut)
 parser.set("markdown-preview", "extensions", markdownExtensions)
 parser.set("markdown-preview", "visibility", markdownVisibility)
 parser.set("markdown-preview", "visibilityShortcut", markdownVisibilityShortcut)
+parser.set("markdown-preview", "autoReload", markdownAutoReload)
+parser.set("markdown-preview", "autoReloadSelection", markdownAutoReloadSelection)
 
 if os.path.isfile(confFile):
 	parser.read(confFile)
@@ -80,6 +84,8 @@ if os.path.isfile(confFile):
 	markdownExtensionsList = markdownExtensions.split()
 	markdownVisibility = parser.get("markdown-preview", "visibility")
 	markdownVisibilityShortcut = parser.get("markdown-preview", "visibilityShortcut")
+	markdownAutoReload = parser.get("markdown-preview", "autoReload")
+	markdownAutoReloadSelection = parser.get("markdown-preview", "autoReloadSelection")
 
 if not os.path.exists(confDir):
 	os.makedirs(confDir)
@@ -114,6 +120,15 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 		self.addWindowActions()
 
+		self.handleTabChanged = self.window.connect("active-tab-changed", self.onTabChangedCb)
+		self.handleTabStateChanged = self.window.connect("active-tab-state-changed", self.onTabChangedCb)
+		self.addBufferSignals()
+
+	# This is called every time the document is changed
+	def do_update_state(self, *args):
+		if markdownAutoReload == "1":
+			self.updatePreview(self.window)
+
 	def do_deactivate(self):
 		# Remove actions
 		self.window.remove_action('MarkdownPreview')
@@ -125,6 +140,9 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.action_toggle = None
 		self.scrolledWindow = None
 		self.htmlView = None
+		self.window.disconnect(self.handleTabChanged)
+		self.window.disconnect(self.handleTabStateChanged)
+		self.removeBufferSignals()
 
 	def addMarkdownPreviewTab(self):
 		if markdownPanel == "side":
@@ -144,6 +162,48 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.action_toggle = Gio.SimpleAction(name='ToggleTab')
 		self.action_toggle.connect('activate', lambda x, y: self.toggleTab())
 		self.window.add_action(self.action_toggle)
+
+	def addBufferSignals(self):
+		self.removeBufferSignals()
+
+		if markdownAutoReloadSelection == "1":
+			view = self.window.get_active_view()
+			if view:
+				self.handleBuffer = view.get_buffer()
+				self.handleMarkSet = self.handleBuffer.connect("mark-set", self.onMarkSetCb)
+				self.handleDocumentLoaded = self.handleBuffer.connect("loaded", self.onDocumentLoadedCb)
+
+	def removeBufferSignals(self):
+		if (hasattr(self, "handleMarkSet") and self.handleMarkSet is not None and
+			hasattr(self, "handleBuffer") and self.handleBuffer is not None):
+			self.handleBuffer.disconnect(self.handleMarkSet)
+			self.handleBuffer.disconnect(self.handleDocumentLoaded)
+			del self.handleBuffer
+			del self.handleMarkSet
+			del self.handleDocumentLoaded
+
+	def onTabChangedCb(self, *args):
+		self.addBufferSignals()
+
+		self.updatePreview()
+
+	def onMarkSetCb(self, buf, loc, mark):
+		if mark.get_name() == "insert":
+			doc = self.handleBuffer
+			start = doc.get_iter_at_mark(doc.get_selection_bound())
+			end = doc.get_iter_at_mark(mark)
+			if not start.equal(end):
+				# selection changed
+				self.updatePreview()
+				self.activeSelection = True
+			else:
+				if hasattr(self, "activeSelection") and self.activeSelection:
+					# selection removed
+					self.updatePreview()
+					self.activeSelection = False
+
+	def onDocumentLoadedCb(self, *args):
+		self.updatePreview()
 
 	def onMouseTargetChangedCb(self, view, hitTestResult, modifiers):
 		if hitTestResult.context_is_link():
@@ -272,7 +332,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			start = doc.get_start_iter()
 			end = doc.get_end_iter()
 
-			if doc.get_selection_bounds():
+			if markdownAutoReloadSelection == "1" and doc.get_selection_bounds():
 				start = doc.get_iter_at_mark(doc.get_selection_bound())
 				end = doc.get_iter_at_mark(doc.get_insert())
 

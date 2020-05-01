@@ -131,6 +131,10 @@ The section `markdown-preview` contains several properties:
 
 - `visibilityShortcut`: shortcut to toggle Markdown Preview visibility. The default value is `<Control><Alt>v`.
 
+- `autoReload`: automatically reload the preview when the text is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+
+- `autoReloadSelection`: automatically reload the preview when the selection is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+
 ## Localization
 
 The plugin *Markdown Preview* is localizable. The file containing strings is `plugins/markdown-preview/locale/markdown-preview.pot`.
