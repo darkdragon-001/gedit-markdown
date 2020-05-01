@@ -20,7 +20,7 @@
 
 import gi
 gi.require_version('WebKit2', '4.0')
-from gi.repository import Gdk, Gtk, Gedit, GObject, WebKit2, Gio
+from gi.repository import Gdk, Gtk, GtkSource, Gedit, GObject, WebKit2, Gio
 import codecs
 import os
 import sys
@@ -104,7 +104,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.htmlView.connect("mouse-target-changed", self.onMouseTargetChangedCb)
 		self.htmlView.connect("decide-policy", self.onDecidePolicyCb)
 		self.htmlView.connect("context-menu", self.onContextMenuCb)
-		self.htmlView.load_html((htmlTemplate % ("", )), "file:///")
+		self.updatePreview()
 
 		self.scrolledWindow.add(self.htmlView)
 		self.scrolledWindow.show_all()
@@ -138,7 +138,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 	def addWindowActions(self):
 		self.action_update = Gio.SimpleAction(name='MarkdownPreview')
-		self.action_update.connect('activate', lambda x, y: self.updatePreview(y, False))
+		self.action_update.connect('activate', lambda x, y: self.updatePreview())
 		self.window.add_action(self.action_update)
 
 		self.action_toggle = Gio.SimpleAction(name='ToggleTab')
@@ -190,7 +190,21 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			currentUri = decision.get_request().get_uri()
 			if currentUri.startswith("file:///"):
 				# allow navigating local files
-				decision.use()
+				if currentUri.startswith("file://"+self.window.get_active_document().get_uri_for_display()):
+					# re-render current document to allow "back" functionality
+					self.updatePreview()
+					decision.ignore()
+				else:
+					# render other local files
+					lang = GtkSource.LanguageManager.get_default().guess_language(currentUri, None)
+					if lang.get_id() == "html":
+						decision.use()
+					elif lang.get_id() == "markdown":
+						with open(currentUri[7:], 'r') as file:  # remove "file://"
+							text = file.read()
+							self.render(text, currentUri, True)
+					else:
+						self.render()
 			else:
 				# open in new browser tab
 				webbrowser.open_new_tab(currentUri)
@@ -248,33 +262,46 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		else:
 			self.addMarkdownPreviewTab()
 
-	def updatePreview(self, window, clear):
+	def updatePreview(self, *args):
 		view = self.window.get_active_view()
-
-		if not view and not clear:
+		if not view:
 			return
-
-		html = ""
-		activeUri = "file:///"
-
-		if not clear:
-			doc = view.get_buffer()
+		doc = view.get_buffer()
+		lang = doc.get_language()
+		if lang and lang.get_id() in ["markdown", "html"]:
 			start = doc.get_start_iter()
 			end = doc.get_end_iter()
 
 			if doc.get_selection_bounds():
-				start = doc.get_iter_at_mark(doc.get_insert())
-				end = doc.get_iter_at_mark(doc.get_selection_bound())
+				start = doc.get_iter_at_mark(doc.get_selection_bound())
+				end = doc.get_iter_at_mark(doc.get_insert())
 
 			text = doc.get_text(start, end, True)
 
-			html = htmlTemplate % (markdown.markdown(text, extensions=markdownExtensionsList), )
+			if lang.get_id() == "html":
+				isMarkdown = False
+			elif lang.get_id() == "markdown":
+				isMarkdown = True
 
 			activeUri = "file://"+self.window.get_active_document().get_uri_for_display()  # Absolute paths when existing file
 
+			self.render(text, activeUri, isMarkdown)
+		else:
+			self.render()  # empty page
+
+	def render(self, html=None, activeUri=None, isMarkdown=False):
+		if html is None:
+			html = ""
+		if activeUri is None:
+			activeUri = "file:///"
+
+		if self.urlTooltipVisible():
+			self.urlTooltip.destroy()
+
 		placement = self.scrolledWindow.get_placement()
 
-		htmlDoc = self.htmlView
+		if isMarkdown:
+			html = htmlTemplate % markdown.markdown(html, extensions=markdownExtensionsList)
 		self.htmlView.load_alternate_html(html, activeUri, self.uriToBase(activeUri))
 
 		self.scrolledWindow.set_placement(placement)
@@ -285,10 +312,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			panel = self.window.get_bottom_panel()
 
 		panel.show()
-
-		if not panel.get_visible_child() == self.scrolledWindow:
-			self.addMarkdownPreviewTab()
-			panel.set_visible_child(self.scrolledWindow)
 
 	def uriToBase(self, uri):
 		# special cases: "file:///", "Untitled Document"
