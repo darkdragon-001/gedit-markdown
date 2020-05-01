@@ -40,12 +40,9 @@ except:
 	_ = lambda s: s
 
 # Can be used to add default HTML code (e.g. default header section with CSS).
-htmlTemplate = """
-<head>
-<link href="http://thomasf.github.io/solarized-css/solarized-dark.min.css" rel="stylesheet"></link>
-</head>
-%s
-"""
+htmlTemplate = ""
+with open("template.html", 'r') as f:
+	htmlTemplate = f.read()
 
 # Configuration.
 

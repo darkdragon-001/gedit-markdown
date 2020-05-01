@@ -37,7 +37,11 @@ else:
 	markdownExtensions = "extra toc"
 markdownExtensionsList = markdownExtensions.split()
 
+htmlTemplate = ""
+with open("template.html", 'r') as f:
+	htmlTemplate = f.read()
+
 text = sys.stdin.read()
 print("<!-- Markdown => HTML -->")
 
-print(markdown.markdown(text, extensions=markdownExtensionsList))
+print(htmlTemplate % markdown.markdown(text, extensions=markdownExtensionsList))
