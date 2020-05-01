@@ -133,13 +133,8 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		# delete instance variables
 		self.action_update = None
 		self.action_toggle = None
-		self.actionGroup1 = None
-		self.actionGroup2 = None
 		self.scrolledWindow = None
 		self.htmlView = None
-
-	def do_update_state(self):
-		self.actionGroup1.set_sensitive(self.window.get_active_document() != None)
 
 	def addMarkdownPreviewTab(self):
 		if markdownPanel == "side":
@@ -160,27 +155,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.action_toggle = Gio.SimpleAction(name='ToggleTab')
 		self.action_toggle.connect('activate', lambda x, y: self.toggleTab())
 		self.window.add_action(self.action_toggle)
-
-		self.actionGroup1 = Gtk.ActionGroup("UpdateMarkdownPreview")
-		action = ("MarkdownPreview",
-		          None,
-		          _("Update Markdown Preview"),
-		          markdownShortcut,
-		          _("Preview in HTML of the current document or the selection"),
-		          lambda x, y: self.updatePreview(y, False))
-		#self.actionGroup1.add_actions([action], self.window)
-		#self.window.insert_action_group('win', self.actionGroup1)
-
-		self.actionGroup2 = Gtk.ActionGroup("ToggleTab")
-		action = ("ToggleTab",
-		          None,
-		          _("Toggle Markdown Preview Visibility"),
-		          markdownVisibilityShortcut,
-		          _("Display or hide the Markdown Preview panel tab"),
-		          lambda x, y: self.toggleTab())
-		#self.actionGroup2.add_actions([action], self.window)
-		#self.window.insert_action_group('win', self.actionGroup2)
-
 
 	def copyCurrentUrl(self):
 		self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
