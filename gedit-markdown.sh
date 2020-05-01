@@ -109,9 +109,9 @@ else
 fi
 
 if [[ -n $XDG_CONFIG_HOME ]]; then
-	cheminConfig=$XDG_CONFIG_HOME/gedit
+	cheminConfig=$XDG_CONFIG_HOME/gedit/markdown-preview
 else
-	cheminConfig=$HOME/.config/gedit
+	cheminConfig=$HOME/.config/gedit/markdown-preview
 fi
 
 cheminFichierConfig=$cheminConfig/gedit-markdown.ini
@@ -145,11 +145,12 @@ if [[ $1 == install ]]; then
 	# Au cas où il s'agit d'une mise à jour et non d'une première installation.
 	supprimerGreffon
 
-	# Création des répertoires s'ils n'existent pas déjà.
-	mkdir -pv "$cheminConfig" "$cheminPlugins" "$cheminSnippets"
+	# Configuratión.
+	mkdir -pv "$cheminConfig"
+	cp -rnv config/* "$cheminConfig"  # don't overwrite
 
-	# Copie des fichiers.
-	cp -v config/gedit-markdown.ini "$cheminFichierConfig"
+	# Copie des extraits de code.
+	mkdir -pv "$cheminSnippets"
 	cp -v snippets/markdown.xml "$cheminSnippets"
 
 	# Outil externe.
@@ -160,6 +161,7 @@ if [[ $1 == install ]]; then
 	chmod +x "$cheminTools/export-to-pdf"
 
 	# Greffon «Aperçu Markdown».
+	mkdir -pv "$cheminPlugins"
 	cp -rv plugins/markdown-preview/* "$cheminPlugins"
 	rm -v "$cheminPluginsMarkdownPreview/locale/markdown-preview.pot"
 	find "$cheminPluginsMarkdownPreview/locale/" -name "*.po" -exec rm -vf {} \;

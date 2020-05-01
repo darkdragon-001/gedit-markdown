@@ -38,11 +38,6 @@ try:
 except:
 	_ = lambda s: s
 
-# Can be used to add default HTML code (e.g. default header section with CSS).
-htmlTemplate = ""
-with open("template.html", 'r') as f:
-	htmlTemplate = f.read()
-
 # Configuration.
 
 markdownPanel = "bottom"
@@ -61,8 +56,8 @@ except ImportError:
 else:
 	xdgConfigHome = xdg.BaseDirectory.xdg_config_home
 
-confDir =  os.path.join(xdgConfigHome, "gedit")
-confFile =  os.path.join(confDir, "gedit-markdown.ini")
+confDir =  os.path.join(xdgConfigHome, "gedit/markdown-preview")
+confFile =  os.path.join(confDir, "preferences.ini")
 
 parser = ConfigParser()
 parser.optionxform = str
@@ -91,6 +86,12 @@ if not os.path.exists(confDir):
 
 with open(confFile, "w") as confFile:
 	parser.write(confFile)
+
+# HTML template (e.g. default CSS).
+htmlTemplate = ""
+templateFile = os.path.join(confDir, "template.html")
+with open(templateFile, 'r') as f:
+	htmlTemplate = f.read()
 
 class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	__gtype_name__ = "MarkdownPreviewPlugin"

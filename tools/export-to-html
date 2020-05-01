@@ -26,8 +26,8 @@ except ImportError:
 else:
 	xdgConfigHome = xdg.BaseDirectory.xdg_config_home
 
-confDir =  os.path.join(xdgConfigHome, "gedit")
-confFile =  os.path.join(confDir, "gedit-markdown.ini")
+confDir =  os.path.join(xdgConfigHome, "gedit/markdown-preview")
+confFile =  os.path.join(confDir, "preferences.ini")
 parser = ConfigParser()
 
 if os.path.isfile(confFile):
@@ -38,7 +38,8 @@ else:
 markdownExtensionsList = markdownExtensions.split()
 
 htmlTemplate = ""
-with open("template.html", 'r') as f:
+templateFile = os.path.join(confDir, "template.html")
+with open(templateFile, 'r') as f:
 	htmlTemplate = f.read()
 
 text = sys.stdin.read()
