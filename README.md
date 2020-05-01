@@ -15,7 +15,7 @@ Specifically, it adds:
 
 - Markdown snippets;
 
-- plugin *Markdown Preview* for gedit, displayed in the side panel or the bottom panel and previewing in HTML the current document or selection (this plugin can also be used as a Web browser; see section *Usage*);
+- plugin *Markdown Preview* for gedit, displayed in the side panel or the bottom panel and previewing in HTML the current document or selection;
 
 - an external tool exporting to HTML the current document or selection;
 
@@ -68,19 +68,9 @@ Two items are added in the gedit menu *Tools*:
 
 When right clicking on the preview area, a context menu appears and lists several options. Besides the default ones (previous page, next page, copy, etc.), we have:
 
-- *Copy the current URL*: copy in the clipboard the URL of the document or the page being displayed in the preview tab. If it's a document that has not yet been saved to disk, this menu item is disabled.
-
-- *Go to another URL*: allows to manually enter a local or distant URL of a document or page to visit in the preview tab.
-
-- One of the following two options, depending on the value of the property `externalBrowser` in the configuration file:
-
-	- *Open in an external browser*: allows to open the link in an external browser.
-
-	- *Open in the embedded browser*: allows to open the link in the panel.
-
 - *Update Preview*: reloads in the side panel or in the bottom panel the preview in HTML of the current document or selection.
 
-- *Clear Preview*: clear content of the preview tab.
+Local files will be followed in the preview area while global ones will be opened with your default web browser.
 
 Here's a screenshot of the plugin when it's displayed in the bottom panel:
 
@@ -130,10 +120,6 @@ Most of the time, it will correspond to:
 	$HOME/.config/gedit/gedit-markdown.ini
 
 The section `markdown-preview` contains several properties:
-
-- `externalBrowser`: open links in an external browser by default. Possible values: `0` (don't open links in an external browser by default; default value) or `1` (open links in an external browser by default).
-
-	If `externalBrowser` has a value of `0`, the context menu displayed when right clicking on a link will contain an option to open the link in an external browser. If `externalBrowser` equals `1`, the context menu will contain an option to open the link in the embedded browser.
 
 - `panel`: emplacement of the preview. Possibles values: `bottom` (default value) or `side`.
 
