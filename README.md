@@ -136,9 +136,17 @@ The section `markdown-preview` contains several properties:
 
 - `autoIdle`: only update markdown after this idle time (in milliseconds). Possible values: `0` (update immediately), `250` (default), any positive `float`.
 
-- `autoReload`: automatically reload the preview when the text is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+- `autoReloadActivate`: automatically reload the preview when the plugin is activated. Possible values: `0` (disabled) or `1` (enabled; default value).
 
-- `autoReloadSelection`: automatically reload the preview when the selection is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+- `autoReloadOpen`: automatically reload the preview when the document is opened. Possible values: `0` (disabled) or `1` (enabled; default value).
+
+- `autoReloadSave`: automatically reload the preview when the document is saved. Possible values: `0` (disabled) or `1` (enabled; default value).
+
+- `autoReloadTabs`: automatically reload the preview when the active tab is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+
+- `autoReloadEdit`: automatically reload the preview when the text is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+
+- `autoReloadSelection`: automatically reload the preview when the selection is changed. Possible values: `0` (disabled; default value) or `1` (enabled).
 
 Non-existent properties (as well as the whole file) will be generated with default values on startup.
 

@@ -48,8 +48,12 @@ markdownExtensions = "extra toc"
 markdownVisibility = "1"
 markdownVisibilityShortcut = "<Control><Alt>v"
 markdownAutoIdle = "250"
-markdownAutoReload = "1"
-markdownAutoReloadSelection = "1"
+markdownAutoReloadActivate = "1"
+markdownAutoReloadOpen = "1"
+markdownAutoReloadSave = "1"
+markdownAutoReloadTabs = "1"
+markdownAutoReloadEdit = "1"
+markdownAutoReloadSelection = "0"
 
 try:
 	import xdg.BaseDirectory
@@ -71,7 +75,11 @@ parser.set("markdown-preview", "extensions", markdownExtensions)
 parser.set("markdown-preview", "visibility", markdownVisibility)
 parser.set("markdown-preview", "visibilityShortcut", markdownVisibilityShortcut)
 parser.set("markdown-preview", "autoIdle", markdownAutoIdle)
-parser.set("markdown-preview", "autoReload", markdownAutoReload)
+parser.set("markdown-preview", "autoReloadActivate", markdownAutoReloadActivate)
+parser.set("markdown-preview", "autoReloadOpen", markdownAutoReloadOpen)
+parser.set("markdown-preview", "autoReloadSave", markdownAutoReloadSave)
+parser.set("markdown-preview", "autoReloadTabs", markdownAutoReloadTabs)
+parser.set("markdown-preview", "autoReloadEdit", markdownAutoReloadEdit)
 parser.set("markdown-preview", "autoReloadSelection", markdownAutoReloadSelection)
 
 if os.path.isfile(confFile):
@@ -82,7 +90,11 @@ if os.path.isfile(confFile):
 	markdownVisibility = parser.get("markdown-preview", "visibility")
 	markdownVisibilityShortcut = parser.get("markdown-preview", "visibilityShortcut")
 	markdownAutoIdle = parser.get("markdown-preview", "autoIdle")
-	markdownAutoReload = parser.get("markdown-preview", "autoReload")
+	markdownAutoReloadActivate = parser.get("markdown-preview", "autoReloadActivate")
+	markdownAutoReloadOpen = parser.get("markdown-preview", "autoReloadOpen")
+	markdownAutoReloadSave = parser.get("markdown-preview", "autoReloadSave")
+	markdownAutoReloadTabs = parser.get("markdown-preview", "autoReloadTabs")
+	markdownAutoReloadEdit = parser.get("markdown-preview", "autoReloadEdit")
 	markdownAutoReloadSelection = parser.get("markdown-preview", "autoReloadSelection")
 
 if not os.path.exists(confDir):
@@ -124,7 +136,8 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.htmlView.connect("mouse-target-changed", self.onMouseTargetChangedCb)
 		self.htmlView.connect("decide-policy", self.onDecidePolicyCb)
 		self.htmlView.connect("context-menu", self.onContextMenuCb)
-		self.updatePreview()
+		if markdownAutoReloadActivate == "1":
+			self.updatePreview()
 
 		self.scrolledWindow.add(self.htmlView)
 		self.scrolledWindow.show_all()
@@ -140,7 +153,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 	# This is called every time the document is changed
 	def do_update_state(self, *args):
-		if markdownAutoReload == "1":
+		if markdownAutoReloadEdit == "1":
 			self.autoUpdate(self.window)
 
 	def do_deactivate(self):
@@ -202,21 +215,23 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	def addBufferSignals(self):
 		self.removeBufferSignals()
 
-		if markdownAutoReloadSelection == "1":
-			view = self.window.get_active_view()
-			if view:
-				self.handleBuffer = view.get_buffer()
-				self.handleMarkSet = self.handleBuffer.connect("mark-set", self.onMarkSetCb)
-				self.handleDocumentLoaded = self.handleBuffer.connect("loaded", self.onDocumentLoadedCb)
+		view = self.window.get_active_view()
+		if view:
+			self.handleBuffer = view.get_buffer()
+			self.handleMarkSet = self.handleBuffer.connect("mark-set", self.onMarkSetCb)
+			self.handleDocumentLoaded = self.handleBuffer.connect("loaded", self.onDocumentLoadedCb)
+			self.handleDocumentSaved = self.handleBuffer.connect("saved", self.onDocumentSavedCb)
 
 	def removeBufferSignals(self):
 		if (hasattr(self, "handleMarkSet") and self.handleMarkSet is not None and
 			hasattr(self, "handleBuffer") and self.handleBuffer is not None):
 			self.handleBuffer.disconnect(self.handleMarkSet)
 			self.handleBuffer.disconnect(self.handleDocumentLoaded)
+			self.handleBuffer.disconnect(self.handleDocumentSaved)
 			del self.handleBuffer
 			del self.handleMarkSet
 			del self.handleDocumentLoaded
+			del self.handleDocumentSaved
 
 	def urlTooltipCreate(self, url):
 		self.urlTooltip = Gtk.Window.new(Gtk.WindowType.POPUP)
@@ -258,25 +273,32 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	def onTabChangedCb(self, *args):
 		self.addBufferSignals()
 
-		self.updatePreview()
+		if markdownAutoReloadTabs == "1":
+			self.updatePreview()
 
 	def onMarkSetCb(self, buf, loc, mark):
-		if mark.get_name() == "insert":
-			doc = self.handleBuffer
-			start = doc.get_iter_at_mark(doc.get_selection_bound())
-			end = doc.get_iter_at_mark(mark)
-			if not start.equal(end):
-				# selection changed
-				self.autoUpdate()
-				self.activeSelection = True
-			else:
-				if hasattr(self, "activeSelection") and self.activeSelection:
-					# selection removed
+		if markdownAutoReloadSelection == "1":
+			if mark.get_name() == "insert":
+				doc = self.handleBuffer
+				start = doc.get_iter_at_mark(doc.get_selection_bound())
+				end = doc.get_iter_at_mark(mark)
+				if not start.equal(end):
+					# selection changed
 					self.autoUpdate()
-					self.activeSelection = False
+					self.activeSelection = True
+				else:
+					if hasattr(self, "activeSelection") and self.activeSelection:
+						# selection removed
+						self.autoUpdate()
+						self.activeSelection = False
 
 	def onDocumentLoadedCb(self, *args):
-		self.updatePreview()
+		if markdownAutoReloadOpen == "1":
+			self.updatePreview()
+
+	def onDocumentSavedCb(self, *args):
+		if markdownAutoReloadSave == "1":
+			self.updatePreview()
 
 	def onMouseTargetChangedCb(self, view, hitTestResult, modifiers):
 		self.urlTooltipDestroy()
