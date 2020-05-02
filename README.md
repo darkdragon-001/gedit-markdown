@@ -114,7 +114,7 @@ To edit the tool, go to *Tools > Manage External Tools...*.
 
 ### Configuration file
 
-The configuration file of gedit-markdown is the following:
+The configuration file of gedit-markdown is located at:
 
 	$XDG_CONFIG_HOME/gedit/gedit-markdown.ini
 
@@ -139,6 +139,8 @@ The section `markdown-preview` contains several properties:
 - `autoReload`: automatically reload the preview when the text is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
 
 - `autoReloadSelection`: automatically reload the preview when the selection is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
+
+Non-existent properties (as well as the whole file) will be generated with default values on startup.
 
 ### Examples
 
