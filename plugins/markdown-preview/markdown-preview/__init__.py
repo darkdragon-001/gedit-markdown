@@ -362,8 +362,9 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			except:
 				menu.remove(item)
 
-		item = WebKit2.ContextMenuItem.new_from_gaction(self.action_update, _("Update Preview"))
-		menu.append(item)
+		if not hitTestResult.context_is_link():
+			item = WebKit2.ContextMenuItem.new_from_gaction(self.action_update, _("Update Preview"))
+			menu.append(item)
 
 
 	# Rendering
