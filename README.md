@@ -27,6 +27,8 @@ Specifically, it adds:
 
 - The plugin *Markdown Preview* depends on the package `python3-markdown` and `gir1.2-webkit2-4.0`.
 
+- Recommended: [PyMdown Extensions](https://facelessuser.github.io/pymdown-extensions/installation/)
+
 ## Installation (or update)
 
 - Open a terminal

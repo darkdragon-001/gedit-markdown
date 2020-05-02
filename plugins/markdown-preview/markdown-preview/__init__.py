@@ -93,6 +93,13 @@ templateFile = os.path.join(confDir, "template.html")
 with open(templateFile, 'r') as f:
 	htmlTemplate = f.read()
 
+# Path converter for absolute paths if available
+try:
+	from pymdownx.pathconverter import PathConverterExtension
+	pathConverterAvailable = True
+except:
+	pathConverterAvailable = False
+
 class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	__gtype_name__ = "MarkdownPreviewPlugin"
 	window = GObject.property(type=Gedit.Window)
@@ -369,9 +376,20 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 		placement = self.scrolledWindow.get_placement()
 
+		basePathWebView = self.uriToBase(activeUri)
 		if isMarkdown:
-			html = htmlTemplate % markdown.markdown(html, extensions=markdownExtensionsList)
-		self.htmlView.load_alternate_html(html, activeUri, self.uriToBase(activeUri))
+			extensions = markdownExtensionsList
+			# Use PathConverter extension if available
+			# This avoids the WebView restriction of only accessing files *below* base_path
+			# https://lazka.github.io/pgi-docs/#WebKit2-4.0/classes/WebView.html#WebKit2.WebView.load_html
+			if pathConverterAvailable:
+				basePathWebView = "file:///"
+				# BUG: base_path can't be prefixed with "file://"
+				#      https://github.com/facelessuser/pymdown-extensions/issues/921
+				basePathConverter = self.uriToBase(activeUri)[7:]  # remove "file://" because of bug above
+				extensions.append(PathConverterExtension(base_path=basePathConverter, absolute=True))
+			html = htmlTemplate % markdown.markdown(html, extensions=extensions)
+		self.htmlView.load_alternate_html(html, activeUri, basePathWebView)
 
 		self.scrolledWindow.set_placement(placement)
 
