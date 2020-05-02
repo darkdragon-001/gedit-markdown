@@ -134,6 +134,8 @@ The section `markdown-preview` contains several properties:
 
 - `visibilityShortcut`: shortcut to toggle Markdown Preview visibility. The default value is `<Control><Alt>v`.
 
+- `autoIdle`: only update markdown after this idle time (in milliseconds). Possible values: `0` (update immediately), `250` (default), any positive `float`.
+
 - `autoReload`: automatically reload the preview when the text is changed. Possible values: `0` (disabled) or `1` (enabled; default value).
 
 - `autoReloadSelection`: automatically reload the preview when the selection is changed. Possible values: `0` (disabled) or `1` (enabled; default value).

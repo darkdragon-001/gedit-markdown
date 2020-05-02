@@ -26,6 +26,8 @@ import sys
 import markdown
 import gettext
 from configparser import ConfigParser
+import timeit
+from threading import Timer
 import webbrowser
 
 try:
@@ -45,6 +47,7 @@ markdownShortcut = "<Control><Alt>m"
 markdownExtensions = "extra toc"
 markdownVisibility = "1"
 markdownVisibilityShortcut = "<Control><Alt>v"
+markdownAutoIdle = "250"
 markdownAutoReload = "1"
 markdownAutoReloadSelection = "1"
 
@@ -67,6 +70,7 @@ parser.set("markdown-preview", "shortcut", markdownShortcut)
 parser.set("markdown-preview", "extensions", markdownExtensions)
 parser.set("markdown-preview", "visibility", markdownVisibility)
 parser.set("markdown-preview", "visibilityShortcut", markdownVisibilityShortcut)
+parser.set("markdown-preview", "autoIdle", markdownAutoIdle)
 parser.set("markdown-preview", "autoReload", markdownAutoReload)
 parser.set("markdown-preview", "autoReloadSelection", markdownAutoReloadSelection)
 
@@ -75,9 +79,9 @@ if os.path.isfile(confFile):
 	markdownPanel = parser.get("markdown-preview", "panel")
 	markdownShortcut = parser.get("markdown-preview", "shortcut")
 	markdownExtensions = parser.get("markdown-preview", "extensions")
-	markdownExtensionsList = markdownExtensions.split()
 	markdownVisibility = parser.get("markdown-preview", "visibility")
 	markdownVisibilityShortcut = parser.get("markdown-preview", "visibilityShortcut")
+	markdownAutoIdle = parser.get("markdown-preview", "autoIdle")
 	markdownAutoReload = parser.get("markdown-preview", "autoReload")
 	markdownAutoReloadSelection = parser.get("markdown-preview", "autoReloadSelection")
 
@@ -86,6 +90,9 @@ if not os.path.exists(confDir):
 
 with open(confFile, "w") as confFile:
 	parser.write(confFile)
+
+markdownExtensionsList = markdownExtensions.split()
+markdownAutoIdleSeconds = float(markdownAutoIdle) / 1000.
 
 # HTML template (e.g. default CSS).
 htmlTemplate = ""
@@ -134,7 +141,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	# This is called every time the document is changed
 	def do_update_state(self, *args):
 		if markdownAutoReload == "1":
-			self.updatePreview(self.window)
+			self.autoUpdate(self.window)
 
 	def do_deactivate(self):
 		# Remove actions
@@ -260,12 +267,12 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			end = doc.get_iter_at_mark(mark)
 			if not start.equal(end):
 				# selection changed
-				self.updatePreview()
+				self.autoUpdate()
 				self.activeSelection = True
 			else:
 				if hasattr(self, "activeSelection") and self.activeSelection:
 					# selection removed
-					self.updatePreview()
+					self.autoUpdate()
 					self.activeSelection = False
 
 	def onDocumentLoadedCb(self, *args):
@@ -338,6 +345,18 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 
 	# Rendering
+
+	lastUpdate = 0.
+	def autoUpdate(self, *args):
+		if markdownAutoIdleSeconds > 0:
+			self.lastUpdate = timeit.default_timer()
+			Timer(markdownAutoIdleSeconds, self.autoUpdateTimerCb, args=[self,*args]).start()
+		else:
+			self.updatePreview(self, *args)
+	def autoUpdateTimerCb(self, *args):
+		markdownAutoIdleSeconds = float(markdownAutoIdle) / 1000.
+		if ( timeit.default_timer() - self.lastUpdate ) >= markdownAutoIdleSeconds:
+			self.updatePreview(self, *args)
 
 	def updatePreview(self, *args):
 		view = self.window.get_active_view()
