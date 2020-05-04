@@ -174,34 +174,42 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 	# Windows and Signals
 
-	def addMarkdownPreviewTab(self):
+	def getMarkdownPanel(self):
 		if markdownPanel == "side":
 			panel = self.window.get_side_panel()
 		else:
 			panel = self.window.get_bottom_panel()
+		return panel
 
+	def addMarkdownPreviewTab(self):
+		panel = self.getMarkdownPanel()
 		panel.add_titled(self.scrolledWindow, "MarkdownPreview", _("Markdown Preview"))
 		panel.show()
 		panel.set_visible_child(self.scrolledWindow)
+		self.updatePreview()
+
+	def isMarkdownPreviewTabVisible(self):
+		panel = self.getMarkdownPanel()
+		return panel.get_visible_child() == self.scrolledWindow
+	def isMarkdownPreviewVisible(self):
+		panel = self.getMarkdownPanel()
+		return panel.is_visible() and self.isMarkdownPreviewTabVisible()
 
 	def removeMarkdownPreviewTab(self):
-		if markdownPanel == "side":
-			panel = self.window.get_side_panel()
-		else:
-			panel = self.window.get_bottom_panel()
-
+		panel = self.getMarkdownPanel()
 		panel.remove(self.scrolledWindow)
 
 	def toggleTab(self):
-		if markdownPanel == "side":
-			panel = self.window.get_side_panel()
-		else:
-			panel = self.window.get_bottom_panel()
-
-		if panel.get_visible_child() == self.scrolledWindow:
+		panel = self.getMarkdownPanel()
+		if self.isMarkdownPreviewVisible():  # visible
 			self.removeMarkdownPreviewTab()
-		else:
-			self.addMarkdownPreviewTab()
+		else:  # not visible
+			if not panel.is_visible():
+				panel.show()
+				self.updatePreview()
+			if not self.isMarkdownPreviewTabVisible():
+				# TODO set_visible_child() if it already exists
+				self.addMarkdownPreviewTab()
 
 	def addWindowActions(self):
 		self.action_update = Gio.SimpleAction(name='MarkdownPreview')
@@ -409,6 +417,9 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			self.render()  # empty page
 
 	def render(self, html=None, activeUri=None, isMarkdown=False):
+		if not self.isMarkdownPreviewVisible():
+			return
+
 		if html is None:
 			html = ""
 		if activeUri is None:
@@ -434,13 +445,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.htmlView.load_alternate_html(html, activeUri, basePathWebView)
 
 		self.scrolledWindow.set_placement(placement)
-
-		if markdownPanel == "side":
-			panel = self.window.get_side_panel()
-		else:
-			panel = self.window.get_bottom_panel()
-
-		panel.show()
 
 	def uriToBase(self, uri):
 		# special cases: "file:///", "Untitled Document"
