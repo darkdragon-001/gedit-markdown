@@ -133,11 +133,13 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.scrolledWindow.set_property("shadow-type", Gtk.ShadowType.IN)
 
 		self.htmlView = WebKit2.WebView()
+		self.htmlView.get_settings().set_property('enable_javascript', True)
+		self.htmlView.connect('load-changed', self.onLoadChanged)
 		self.htmlView.connect("mouse-target-changed", self.onMouseTargetChangedCb)
 		self.htmlView.connect("decide-policy", self.onDecidePolicyCb)
 		self.htmlView.connect("context-menu", self.onContextMenuCb)
 		if markdownAutoReloadActivate == "1":
-			self.updatePreview()
+			self.updatePreview(reason='pluginActivated')
 
 		self.scrolledWindow.add(self.htmlView)
 		self.scrolledWindow.show_all()
@@ -186,7 +188,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		panel.add_titled(self.scrolledWindow, "MarkdownPreview", _("Markdown Preview"))
 		panel.show()
 		panel.set_visible_child(self.scrolledWindow)
-		self.updatePreview()
+		self.updatePreview(reason='previewVisible')
 
 	def isMarkdownPreviewTabVisible(self):
 		panel = self.getMarkdownPanel()
@@ -206,14 +208,14 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		else:  # not visible
 			if not panel.is_visible():
 				panel.show()
-				self.updatePreview()
+				self.updatePreview(reason='previewVisible')
 			if not self.isMarkdownPreviewTabVisible():
 				# TODO set_visible_child() if it already exists
 				self.addMarkdownPreviewTab()
 
 	def addWindowActions(self):
 		self.action_update = Gio.SimpleAction(name='MarkdownPreview')
-		self.action_update.connect('activate', lambda x, y: self.updatePreview())
+		self.action_update.connect('activate', lambda x, y: self.updatePreview(reason='userAction'))
 		self.window.add_action(self.action_update)
 
 		self.action_toggle = Gio.SimpleAction(name='ToggleTab')
@@ -275,6 +277,24 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		if hasattr(self, "urlTooltip") and self.urlTooltip.get_property("visible"):
 			self.urlTooltip.destroy()
 
+	def rememberScroll(self, *args):
+		js = 'window.document.body.scrollTop'
+		self.htmlView.run_javascript(js, None, self.onRememberScrollFinished, None)
+
+	def restoreScroll(self, *args):
+		if hasattr(self, "scrollRestore") and self.scrollRestore:  # only restore on reload, not on navigation
+			if hasattr(self, "scrollPosition") and self.scrollPosition:
+				js = 'window.document.body.scrollTop = ' + str(self.scrollPosition)
+				self.htmlView.run_javascript(js, None, None, None)
+			self.scrollRestore = False
+
+	def onRememberScrollFinished(self, webview, result, user_data):
+		js_result = webview.run_javascript_finish(result)
+		if js_result is not None:
+			value = js_result.get_js_value()
+			if not value.is_undefined():
+				self.scrollPosition = value.to_int32()
+
 
 	# Callbacks
 
@@ -282,7 +302,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.addBufferSignals()
 
 		if markdownAutoReloadTabs == "1":
-			self.updatePreview()
+			self.updatePreview(reason='tabChanged')
 
 	def onMarkSetCb(self, buf, loc, mark):
 		if markdownAutoReloadSelection == "1":
@@ -302,15 +322,19 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 
 	def onDocumentLoadedCb(self, *args):
 		if markdownAutoReloadOpen == "1":
-			self.updatePreview()
+			self.updatePreview(reason='documentLoaded')
 
 	def onDocumentSavedCb(self, *args):
 		if markdownAutoReloadSave == "1":
-			self.updatePreview()
+			self.updatePreview(reason='documentSaved')
+
+	def onLoadChanged(self, view, loadEvent):
+		self.restoreScroll()
 
 	def onMouseTargetChangedCb(self, view, hitTestResult, modifiers):
-		self.urlTooltipDestroy()
+		self.rememberScroll()  # TODO find better event for scrolling with keyboard, scrollbar, etc.
 
+		self.urlTooltipDestroy()
 		if hitTestResult.context_is_link():
 			self.urlTooltipCreate(hitTestResult.get_link_uri())
 
@@ -322,7 +346,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 				# allow navigating local files
 				if currentUri.startswith("file://"+self.window.get_active_document().get_uri_for_display()):
 					# re-render current document to allow "back" functionality
-					self.updatePreview()
+					self.updatePreview(reason='navigation')
 					decision.ignore()
 				else:
 					# render other local files
@@ -383,13 +407,13 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			self.lastUpdate = timeit.default_timer()
 			Timer(markdownAutoIdleSeconds, self.autoUpdateTimerCb, args=[self,*args]).start()
 		else:
-			self.updatePreview(self, *args)
+			self.updatePreview(self, *args, reason='editor')
 	def autoUpdateTimerCb(self, *args):
 		markdownAutoIdleSeconds = float(markdownAutoIdle) / 1000.
 		if ( timeit.default_timer() - self.lastUpdate ) >= markdownAutoIdleSeconds:
-			self.updatePreview(self, *args)
+			self.updatePreview(self, *args, reason='editor')
 
-	def updatePreview(self, *args):
+	def updatePreview(self, *args, **kwargs):
 		view = self.window.get_active_view()
 		if not view:
 			return
@@ -413,6 +437,9 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			activeUri = "file://"+self.window.get_active_document().get_uri_for_display()  # Absolute paths when existing file
 
 			self.render(text, activeUri, isMarkdown)
+
+			if 'reason' in kwargs and kwargs['reason'] != 'navigation':
+				self.scrollRestore = True  # NOTE this is not called after onDecidePolicyCb when navigating
 		else:
 			self.render()  # empty page
 
@@ -426,8 +453,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			activeUri = "file:///"
 
 		self.urlTooltipDestroy()
-
-		placement = self.scrolledWindow.get_placement()
 
 		basePathWebView = self.uriToBase(activeUri)
 		if isMarkdown:
@@ -443,8 +468,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 				extensions.append(PathConverterExtension(base_path=basePathConverter, absolute=True))
 			html = htmlTemplate % markdown.markdown(html, extensions=extensions)
 		self.htmlView.load_alternate_html(html, activeUri, basePathWebView)
-
-		self.scrolledWindow.set_placement(placement)
 
 	def uriToBase(self, uri):
 		# special cases: "file:///", "Untitled Document"
