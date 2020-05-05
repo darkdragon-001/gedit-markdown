@@ -344,8 +344,8 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			currentUri = decision.get_request().get_uri()
 			if currentUri.startswith("file:///"):
 				# allow navigating local files
-				if currentUri.startswith("file://"+self.window.get_active_document().get_uri_for_display()):
-					# re-render current document to allow "back" functionality
+				if currentUri.startswith(self.getActiveUri()):
+					# re-render current document to allow "back" functionality and avoid confusion on unsaved files
 					self.updatePreview(reason='navigation')
 					decision.ignore()
 				else:
@@ -434,7 +434,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			elif lang.get_id() == "markdown":
 				isMarkdown = True
 
-			activeUri = "file://"+self.window.get_active_document().get_uri_for_display()  # Absolute paths when existing file
+			activeUri = self.getActiveUri()
 
 			self.render(text, activeUri, isMarkdown)
 
@@ -469,8 +469,15 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			html = htmlTemplate % markdown.markdown(html, extensions=extensions)
 		self.htmlView.load_alternate_html(html, activeUri, basePathWebView)
 
+	def getActiveUri(self):
+		activeUri = self.window.get_active_document().get_uri_for_display()  # Absolute paths when existing file
+		if len(activeUri)<1 or activeUri[0] != '/':  # File does not exist
+			activeUri = '/' + activeUri  # force valid local URI
+		return "file://" + activeUri
+
+
 	def uriToBase(self, uri):
-		# special cases: "file:///", "Untitled Document"
+		# cases: "file:///", "file:///path/to/file", "file:///Untitled Document 1"
 		return uri.rpartition("/")[0]+"/"
 
 
