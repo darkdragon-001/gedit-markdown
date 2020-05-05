@@ -243,40 +243,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			del self.handleDocumentLoaded
 			del self.handleDocumentSaved
 
-	def urlTooltipCreate(self, url):
-		self.urlTooltip = Gtk.Window.new(Gtk.WindowType.POPUP)
-		self.urlTooltip.set_border_width(2)
-		self.urlTooltip.modify_bg(0, Gdk.color_parse("#d9d9d9"))
-
-		label = Gtk.Label()
-		text = (url[:75] + "...") if len(url) > 75 else url
-		label.set_text(text)
-		label.modify_fg(0, Gdk.color_parse("black"))
-		self.urlTooltip.add(label)
-		label.show()
-
-		self.urlTooltip.show()
-
-		xPointer, yPointer = self.urlTooltip.get_pointer()
-
-		xWindow = self.window.get_position()[0]
-		widthWindow = self.window.get_size()[0]
-
-		widthUrlTooltip = self.urlTooltip.get_size()[0]
-		xUrlTooltip = xPointer
-		yUrlTooltip = yPointer + 15
-
-		xOverflow = (xUrlTooltip + widthUrlTooltip) - (xWindow + widthWindow)
-
-		if xOverflow > 0:
-			xUrlTooltip = xUrlTooltip - xOverflow
-
-		self.urlTooltip.move(xUrlTooltip, yUrlTooltip)
-
-	def urlTooltipDestroy(self):
-		if hasattr(self, "urlTooltip") and self.urlTooltip.get_property("visible"):
-			self.urlTooltip.destroy()
-
 	def rememberScroll(self, *args):
 		js = 'window.document.body.scrollTop'
 		self.htmlView.run_javascript(js, None, self.onRememberScrollFinished, None)
@@ -334,9 +300,12 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 	def onMouseTargetChangedCb(self, view, hitTestResult, modifiers):
 		self.rememberScroll()  # TODO find better event for scrolling with keyboard, scrollbar, etc.
 
-		self.urlTooltipDestroy()
 		if hitTestResult.context_is_link():
-			self.urlTooltipCreate(hitTestResult.get_link_uri())
+			url = hitTestResult.get_link_uri()
+			text = (url[:75] + "...") if len(url) > 75 else url
+			self.window.set_tooltip_text(text)
+		else:
+			self.window.set_has_tooltip(False)
 
 	def onDecidePolicyCb(self, view, decision, decisionType):
 		if decisionType == WebKit2.PolicyDecisionType.NAVIGATION_ACTION: # type(decision) == WebKit2.NavigationPolicyDecision
@@ -364,7 +333,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			else:
 				# open in new browser tab
 				webbrowser.open_new_tab(currentUri)
-				self.urlTooltipDestroy()
 				decision.ignore()
 		elif decisionType == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:  # type(decision) == WebKit2.NavigationPolicyDecision
 			# Forbid new windows
@@ -379,8 +347,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		return True
 
 	def onContextMenuCb(self, view, menu, event, hitTestResult):
-		self.urlTooltipDestroy()
-
 		for item in menu.get_items():
 			try:
 				stockAction = item.get_stock_action()
@@ -451,8 +417,6 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			html = ""
 		if activeUri is None:
 			activeUri = "file:///"
-
-		self.urlTooltipDestroy()
 
 		basePathWebView = self.uriToBase(activeUri)
 		if isMarkdown:
