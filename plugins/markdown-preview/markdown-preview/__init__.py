@@ -51,7 +51,7 @@ markdownAutoIdle = "250"
 markdownAutoReloadActivate = "1"
 markdownAutoReloadOpen = "1"
 markdownAutoReloadSave = "1"
-markdownAutoReloadTabs = "1"
+markdownAutoReloadTabs = "0"  # TODO BUG https://gitlab.gnome.org/GNOME/gedit/-/issues/322
 markdownAutoReloadEdit = "1"
 markdownAutoReloadSelection = "0"
 
