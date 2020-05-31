@@ -45,7 +45,7 @@ except:
 markdownPanel = "bottom"
 markdownShortcut = "<Control><Alt>m"
 markdownExtensions = "extra toc"
-markdownVisibility = "1"
+markdownVisibility = "0"  # TODO BUG crash on startup when markdownAutoReloadTabs="0"
 markdownVisibilityShortcut = "<Control><Alt>v"
 markdownAutoIdle = "250"
 markdownAutoReloadActivate = "1"
@@ -127,7 +127,7 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		GObject.Object.__init__(self)
 
 	def do_activate(self):
-		self.scrolledWindow = Gtk.ScrolledWindow()
+		self.scrolledWindow = Gtk.ScrolledWindow()  # TODO replace by something simpler (scroll is handled by WebKit2.WebView)
 		self.scrolledWindow.set_property("hscrollbar-policy", Gtk.PolicyType.AUTOMATIC)
 		self.scrolledWindow.set_property("vscrollbar-policy", Gtk.PolicyType.AUTOMATIC)
 		self.scrolledWindow.set_property("shadow-type", Gtk.ShadowType.IN)
@@ -159,19 +159,20 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			self.autoUpdate(self.window)
 
 	def do_deactivate(self):
+		# Remove signals
+		self.removeBufferSignals()
+		self.window.disconnect(self.handleTabChanged)
+		self.window.disconnect(self.handleTabStateChanged)
 		# Remove actions
 		self.window.remove_action('MarkdownPreview')
 		self.window.remove_action('ToggleTab')
+		self.action_update = None
+		self.action_toggle = None
 		# Remove Markdown Preview from the panel.
 		self.removeMarkdownPreviewTab()
 		# delete instance variables
-		self.action_update = None
-		self.action_toggle = None
 		self.scrolledWindow = None
 		self.htmlView = None
-		self.window.disconnect(self.handleTabChanged)
-		self.window.disconnect(self.handleTabStateChanged)
-		self.removeBufferSignals()
 
 
 	# Windows and Signals
@@ -183,35 +184,35 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 			panel = self.window.get_bottom_panel()
 		return panel
 
-	def addMarkdownPreviewTab(self):
+	def isMarkdownPreviewTabAdded(self):
 		panel = self.getMarkdownPanel()
-		panel.add_titled(self.scrolledWindow, "MarkdownPreview", _("Markdown Preview"))
-		panel.show()
-		panel.set_visible_child(self.scrolledWindow)
-		self.updatePreview(reason='previewVisible')
-
+		return panel.get_child_by_name("MarkdownPreview") is not None
 	def isMarkdownPreviewTabVisible(self):
 		panel = self.getMarkdownPanel()
-		return panel.get_visible_child() == self.scrolledWindow
+		return panel.get_visible_child_name() == "MarkdownPreview"
 	def isMarkdownPreviewVisible(self):
+		return self.scrolledWindow.get_mapped()  # self and all parents visible
+
+	def addMarkdownPreviewTab(self):
 		panel = self.getMarkdownPanel()
-		return panel.is_visible() and self.isMarkdownPreviewTabVisible()
+		if not panel.is_visible():
+			panel.show()
+		if not self.isMarkdownPreviewTabAdded():
+			panel.add_titled(self.scrolledWindow, "MarkdownPreview", _("Markdown Preview"))
+		if not self.isMarkdownPreviewTabVisible():
+			panel.set_visible_child_name("MarkdownPreview")
+		self.updatePreview(reason='previewVisible')
 
 	def removeMarkdownPreviewTab(self):
-		panel = self.getMarkdownPanel()
-		panel.remove(self.scrolledWindow)
+		if self.isMarkdownPreviewTabAdded():
+			panel = self.getMarkdownPanel()
+			panel.remove(self.scrolledWindow)
 
 	def toggleTab(self):
-		panel = self.getMarkdownPanel()
-		if self.isMarkdownPreviewVisible():  # visible
+		if not self.isMarkdownPreviewVisible():
+			self.addMarkdownPreviewTab()
+		else:
 			self.removeMarkdownPreviewTab()
-		else:  # not visible
-			if not panel.is_visible():
-				panel.show()
-				self.updatePreview(reason='previewVisible')
-			if not self.isMarkdownPreviewTabVisible():
-				# TODO set_visible_child() if it already exists
-				self.addMarkdownPreviewTab()
 
 	def addWindowActions(self):
 		self.action_update = Gio.SimpleAction(name='MarkdownPreview')
