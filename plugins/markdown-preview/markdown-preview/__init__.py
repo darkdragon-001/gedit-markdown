@@ -204,9 +204,10 @@ class MarkdownPreviewPlugin(GObject.Object, Gedit.WindowActivatable):
 		self.updatePreview(reason='previewVisible')
 
 	def removeMarkdownPreviewTab(self):
+		panel = self.getMarkdownPanel()
 		if self.isMarkdownPreviewTabAdded():
-			panel = self.getMarkdownPanel()
 			panel.remove(self.scrolledWindow)
+		panel.hide()
 
 	def toggleTab(self):
 		if not self.isMarkdownPreviewVisible():
